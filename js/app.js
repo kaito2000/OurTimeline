@@ -28,11 +28,6 @@ class App {
   async start() {
     console.log('Starting OurTimeline App...');
 
-    // iOS Safari standalone (ホーム画面起動) の検出
-    if (typeof window !== 'undefined' && (window.navigator?.standalone || window.matchMedia?.('(display-mode: standalone)')?.matches)) {
-      document.documentElement.classList.add('standalone-ios');
-    }
-
     // 1. URLパラメータの取得 & サニタイズ（キー覗き見防止）
     const searchParams = window.location.search;
     store.init(searchParams);
