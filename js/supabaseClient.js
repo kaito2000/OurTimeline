@@ -58,6 +58,44 @@ export async function getSupabaseClient(url, anonKey, pairId, secretKey) {
 }
 
 /**
+ * Supabaseへの疎通・テーブル存在チェック
+ */
+export async function testSupabaseConnection(url, anonKey, pairId, secretKey) {
+  if (!url || !anonKey) {
+    return { success: false, message: 'URLまたはAPIキーが入力されていません。' };
+  }
+  try {
+    const client = await getSupabaseClient(url, anonKey, pairId, secretKey);
+    if (!client) {
+      return { success: false, message: 'Supabaseクライアントの初期化に失敗しました。URLの形式を確認してください。' };
+    }
+
+    // pairs テーブルの疎通確認
+    const { error } = await client.from('pairs').select('id').limit(1);
+    if (error) {
+      if (error.code === '42P01' || (error.message && error.message.includes('does not exist'))) {
+        return {
+          success: false,
+          code: 'TABLE_NOT_FOUND',
+          message: 'テーブル「pairs」が見つかりません。SupabaseのSQL Editorでテーブル作成スクリプトを実行してください。'
+        };
+      }
+      if (error.code === 'PGRST301' || (error.message && (error.message.includes('JWT') || error.message.includes('API key')))) {
+        return {
+          success: false,
+          code: 'AUTH_FAILED',
+          message: 'Anon API Keyが無効です。SupabaseダッシュボードのAPIキーをご確認ください。'
+        };
+      }
+      return { success: false, message: `Supabaseエラー: ${error.message}` };
+    }
+    return { success: true, message: 'Supabaseへの接続に成功しました！' };
+  } catch (err) {
+    return { success: false, message: `接続エラー: ${err.message || err}` };
+  }
+}
+
+/**
  * 夫婦ペアの登録・同期（未登録ならpairsテーブルに作成）
  */
 export async function ensurePairExists(client, pairId, secretKey, datingDate, marriageDate) {

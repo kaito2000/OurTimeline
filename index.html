@@ -217,6 +217,14 @@
           以下の共有URLをLINE等でパートナーに送るだけで、<strong>Supabaseの接続設定もペアリングもすべて自動で完了</strong>します（パートナー側でのURLやキーの入力は一切不要です）。
         </p>
 
+        <div id="share-sync-status-indicator" class="p-3 rounded-2xl text-xs flex items-center gap-2 bg-emerald-50 text-emerald-800 border border-emerald-200">
+          <span class="text-base">✅</span>
+          <div>
+            <p class="font-bold">Supabase自動接続設定が同封されています</p>
+            <p class="text-[11px] text-emerald-700/80">パートナーがURLを開くだけで、リアルタイム同期が開始されます。</p>
+          </div>
+        </div>
+
         <div class="p-3.5 bg-emerald-50/70 rounded-2xl border border-emerald-100 space-y-2">
           <label class="block text-[11px] font-bold text-emerald-900">共有ペアリングURL</label>
           <div class="flex gap-2">
@@ -226,6 +234,15 @@
             </button>
           </div>
           <p id="share-copy-feedback" class="text-xs text-emerald-700 font-bold hidden">✓ クリップボードにコピーしました！</p>
+        </div>
+
+        <div class="p-3 bg-amber-50/80 rounded-2xl border border-amber-200/80 text-xs text-amber-900 space-y-1">
+          <p class="font-bold flex items-center gap-1.5">
+            <span>💡</span> パートナーへの共有のコツ
+          </p>
+          <p class="text-[11px] text-amber-800 leading-relaxed">
+            LINE等で送った場合、LINEの画面内ではなく<strong>右上のメニューから「Safariで開く」</strong>をタップして開いてください。ふたりのデータが安定して同期されます。
+          </p>
         </div>
 
         <div class="p-3.5 bg-slate-50/80 rounded-2xl border border-slate-100 text-xs text-slate-500 space-y-1.5 leading-relaxed">
@@ -322,6 +339,6 @@
   </div>
 
   <!-- Main JavaScript -->
-  <script type="module" src="./js/app.js"></script>
+  <script type="module" src="./js/app.js?v=1.9.0"></script>
 </body>
 </html>

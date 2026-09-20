@@ -269,6 +269,30 @@ export class ModalController {
     if (this.pairIdDisplay) {
       this.pairIdDisplay.textContent = pairId;
     }
+
+    const indicator = document.getElementById('share-sync-status-indicator');
+    if (indicator) {
+      if (supabaseUrl && supabaseAnonKey) {
+        indicator.className = 'p-3 rounded-2xl text-xs flex items-center gap-2 bg-emerald-50 text-emerald-800 border border-emerald-200';
+        indicator.innerHTML = `
+          <span class="text-base">✅</span>
+          <div>
+            <p class="font-bold">Supabase自動接続設定が同封されています</p>
+            <p class="text-[11px] text-emerald-700/80">パートナーがURLを開くだけで、リアルタイム同期が開始されます。</p>
+          </div>
+        `;
+      } else {
+        indicator.className = 'p-3 rounded-2xl text-xs flex items-center gap-2 bg-amber-50 text-amber-900 border border-amber-200';
+        indicator.innerHTML = `
+          <span class="text-base">⚠️</span>
+          <div>
+            <p class="font-bold">Supabase接続設定がまだ完了していません</p>
+            <p class="text-[11px] text-amber-800/80">このまま共有すると端末内のみの動作になります。ふたりで同期するには先に「⚙️ 設定」からURLとAPIキーを保存してください。</p>
+          </div>
+        `;
+      }
+    }
+
     this.openModal(this.shareModal);
   }
 

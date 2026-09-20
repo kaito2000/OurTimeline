@@ -14,6 +14,8 @@ export class Store {
       events: [],
       isOnline: (typeof navigator !== 'undefined' && typeof navigator.onLine === 'boolean') ? navigator.onLine : true,
       isSyncing: false,
+      syncStatus: 'unconfigured', // 'unconfigured' | 'connecting' | 'connected' | 'error'
+      syncErrorMessage: '',
       lastError: null
     };
 
@@ -127,6 +129,8 @@ export class Store {
       this.saveEventsCache();
     }
 
+    this.state.syncStatus = (this.state.supabaseUrl && this.state.supabaseAnonKey) ? 'connecting' : 'unconfigured';
+
     this.notify();
   }
 
@@ -214,6 +218,12 @@ export class Store {
 
   setSyncing(isSyncing) {
     this.state.isSyncing = isSyncing;
+    this.notify();
+  }
+
+  setSyncStatus(status, errorMessage = '') {
+    this.state.syncStatus = status;
+    this.state.syncErrorMessage = errorMessage;
     this.notify();
   }
 

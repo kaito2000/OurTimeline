@@ -1,5 +1,5 @@
-// OurTimeline Service Worker
-const CACHE_NAME = 'ourtimeline-v1.8.0';
+// OurTimeline Service Worker - Network-First for Instant Updates
+const CACHE_NAME = 'ourtimeline-v1.9.0';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -45,7 +45,7 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Supabase API, WebSocket (Realtime), 外部CDNなどはネットワーク優先
+  // Supabase API, WebSocket (Realtime), 外部CDNなどはネットワーク直接
   const url = new URL(event.request.url);
   if (
     url.origin.includes('supabase.co') ||
@@ -55,23 +55,26 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Network-First 戦略: 常にネットワークから最新を取得しキャッシュを更新。オフライン時のみキャッシュ利用
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        // キャッシュがあれば即座に返し、バックグラウンドで最新を取得（Stale-while-revalidate）
-        fetch(event.request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse));
-          }
-        }).catch(() => {});
-        return cachedResponse;
-      }
-      return fetch(event.request).catch(() => {
-        // オフライン時のフォールバック
-        if (event.request.headers.get('accept')?.includes('text/html')) {
-          return caches.match('./index.html');
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const responseClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
         }
-      });
-    })
+        return networkResponse;
+      })
+      .catch(() => {
+        // オフライン時のフォールバック
+        return caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          if (event.request.headers.get('accept')?.includes('text/html')) {
+            return caches.match('./index.html');
+          }
+        });
+      })
   );
 });
