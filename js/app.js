@@ -103,24 +103,24 @@ class App {
       const days = calculateDaysCount(state.anniversaryDating);
       this.daysCounterEl.textContent = `Day ${days}`;
       if (this.anniversaryLabelEl) {
-        this.anniversaryLabelEl.textContent = `ふたりが出会ってから ${days} 日目`;
+        this.anniversaryLabelEl.textContent = `(${days}日目)`;
       }
     }
 
     // 2. 同期ステータスバッジ
     if (this.syncStatusEl) {
       if (!state.isOnline) {
-        this.syncStatusEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-slate-300"></span> オフライン（端末に保存中）';
-        this.syncStatusEl.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-white/20 backdrop-blur-md text-white border border-white/30 shadow-sm';
+        this.syncStatusEl.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> オフライン';
+        this.syncStatusEl.className = 'flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 shadow-sm';
       } else if (state.isSyncing) {
-        this.syncStatusEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-300 animate-pulse"></span> 同期中...';
-        this.syncStatusEl.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-white/20 backdrop-blur-md text-white border border-white/30 shadow-sm';
+        this.syncStatusEl.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> 同期中';
+        this.syncStatusEl.className = 'flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 shadow-sm';
       } else if (this.supabase) {
-        this.syncStatusEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-300"></span> リアルタイム同期中';
-        this.syncStatusEl.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-white/20 backdrop-blur-md text-white border border-white/30 shadow-sm';
+        this.syncStatusEl.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> リアルタイム同期中';
+        this.syncStatusEl.className = 'flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200/80 shadow-sm';
       } else {
-        this.syncStatusEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-sky-200"></span> ローカル保存中';
-        this.syncStatusEl.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-white/20 backdrop-blur-md text-white border border-white/30 shadow-sm';
+        this.syncStatusEl.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> 端末に保存中';
+        this.syncStatusEl.className = 'flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50/80 text-emerald-800 border border-emerald-100 shadow-sm';
       }
     }
 
