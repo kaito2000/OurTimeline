@@ -1,5 +1,5 @@
 // OurTimeline Service Worker
-const CACHE_NAME = 'ourtimeline-v1.4.0';
+const CACHE_NAME = 'ourtimeline-v1.5.0';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

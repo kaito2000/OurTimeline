@@ -217,3 +217,23 @@ body {
   padding-bottom: max(1rem, env(safe-area-inset-bottom, 1rem));
 }
 
+/* iOS Safari 日付入力欄（input[type="date"]）のはみ出し防止 */
+input[type="date"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+input[type="date"]::-webkit-date-and-time-value {
+  text-align: left;
+  padding: 0;
+  margin: 0;
+  min-height: 1.25em;
+}
+
+
