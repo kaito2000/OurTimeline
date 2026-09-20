@@ -29,13 +29,19 @@ class App {
   async start() {
     console.log('Starting OurTimeline App...');
 
-    // 1. URLパラメータの取得 & サニタイズ
+    // 1. URLパラメータの取得 & 初期化
     const searchParams = window.location.search;
     const urlParams = new URLSearchParams(searchParams);
     const hasPairParam = urlParams.has('pair');
     const hasSupabaseParam = urlParams.has('su');
 
     store.init(searchParams);
+
+    // スタンドアロンPWAモード（ホーム画面から起動されたか）の判定
+    const isStandalone = (typeof window !== 'undefined') && (
+      window.navigator.standalone === true ||
+      (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+    );
 
     // アプリ内ブラウザ（LINE, Instagram等）の検出
     const ua = (typeof navigator !== 'undefined' && navigator.userAgent) || '';
@@ -44,11 +50,31 @@ class App {
     if (isInAppBrowser) {
       // LINE等のアプリ内ブラウザでは、Safari等に引き継ぐためURLパラメータを消去せず保持
       this.showInAppBrowserBanner();
-    } else {
-      // 標準ブラウザではアドレスバーからキーを除去して履歴保護
+    } else if (isStandalone) {
+      // ホーム画面PWAから起動された場合:
+      // PWA専用localStorageに保存完了しているため、アドレス履歴サニタイズ（念のため）
       if (searchParams && window.history && window.history.replaceState) {
         window.history.replaceState({}, document.title, window.location.pathname);
       }
+    } else {
+      // Safari等の標準ブラウザ内で開かれている場合:
+      // ★超重要★ iOS Safariでは「ホーム画面に追加」時に現在のアドレスバーURLがアイコンに焼き付けられる。
+      // ここでパラメータを消してしまうと、ホーム画面PWA起動時に空の設定で初期化されてしまうため、
+      // Safariブラウザ内ではアドレスバーに常にペアID・秘密鍵・Supabase情報を維持する！
+      const { pairId, secretKey, supabaseUrl, supabaseAnonKey } = store.state;
+      if (pairId && secretKey) {
+        const fullParams = new URLSearchParams();
+        fullParams.set('pair', pairId);
+        fullParams.set('key', secretKey);
+        if (supabaseUrl) fullParams.set('su', supabaseUrl);
+        if (supabaseAnonKey) fullParams.set('sk', supabaseAnonKey);
+        const desiredUrl = `${window.location.pathname}?${fullParams.toString()}`;
+        if (window.location.search !== `?${fullParams.toString()}`) {
+          window.history.replaceState({}, document.title, desiredUrl);
+        }
+      }
+      this.updateDynamicManifest();
+      this.showAddToHomeScreenHint();
     }
 
     if (hasPairParam || hasSupabaseParam) {
@@ -128,6 +154,47 @@ class App {
       <button type="button" class="p-1 text-white/80 hover:text-white text-sm" onclick="this.parentElement.remove()">✕</button>
     `;
     document.body.prepend(banner);
+  }
+
+  updateDynamicManifest() {
+    const manifestLink = document.querySelector('link[rel="manifest"]');
+    if (!manifestLink) return;
+    const { pairId, secretKey, supabaseUrl, supabaseAnonKey } = store.state;
+    if (!pairId) return;
+
+    const params = new URLSearchParams();
+    params.set('pair', pairId);
+    if (secretKey) params.set('key', secretKey);
+    if (supabaseUrl) params.set('su', supabaseUrl);
+    if (supabaseAnonKey) params.set('sk', supabaseAnonKey);
+
+    const fullStartUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+
+    fetch('./manifest.json')
+      .then((res) => res.json())
+      .then((manifest) => {
+        manifest.start_url = fullStartUrl;
+        const blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+        manifestLink.href = URL.createObjectURL(blob);
+      })
+      .catch(() => {});
+  }
+
+  showAddToHomeScreenHint() {
+    const isIos = typeof navigator !== 'undefined' && /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (!isIos || document.getElementById('pwa-install-hint')) return;
+
+    const hint = document.createElement('div');
+    hint.id = 'pwa-install-hint';
+    hint.className = 'sticky top-0 z-40 bg-emerald-800 text-white px-3.5 py-2 text-xs flex items-center justify-between shadow-md';
+    hint.innerHTML = `
+      <div class="flex items-center gap-2 flex-1 mr-2">
+        <span class="text-sm">📲</span>
+        <span class="leading-snug">Safari下部の共有ボタン <svg class="inline w-3.5 h-3.5 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> →<strong>「ホーム画面に追加」</strong>でアプリ化できます</span>
+      </div>
+      <button type="button" class="p-1 text-white/80 hover:text-white text-sm" onclick="this.parentElement.remove()">✕</button>
+    `;
+    document.body.prepend(hint);
   }
 
   renderUi(state) {
