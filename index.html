@@ -7,9 +7,9 @@
   
   <!-- PWA Settings -->
   <link rel="manifest" href="./manifest.json" />
-  <meta name="theme-color" content="#2d6a4f" />
+  <meta name="theme-color" content="#f5f8f5" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="OurTimeline" />
   <link rel="icon" type="image/svg+xml" href="./icons/icon.svg" />
   <link rel="apple-touch-icon" href="./icons/icon-192.png" />
@@ -53,9 +53,9 @@
   <div class="ambient-glow-top"></div>
   <div class="ambient-glow-bottom"></div>
 
-  <!-- グラスモーフィズム ヘッダー -->
-  <header class="sticky top-0 z-40 bg-white/75 backdrop-blur-xl border-b border-emerald-100/70 shadow-[0_4px_20px_-4px_rgba(45,106,79,0.04)]">
-    <div class="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+  <!-- グラスモーフィズム ヘッダー (iPhone Notch / Dynamic Island セーフエリア対応) -->
+  <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-emerald-100/70 shadow-[0_4px_20px_-4px_rgba(45,106,79,0.04)] safe-top">
+    <div class="max-w-2xl mx-auto px-4 py-2.5 flex items-center justify-between">
       <!-- アプリロゴ (ハートを使わないボタニカル・タイムラインシンボル) -->
       <div class="flex items-center gap-3">
         <div class="relative group">
