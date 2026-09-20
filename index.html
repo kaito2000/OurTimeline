@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>OurTimeline - ふたりのクロニクル</title>
+  
+  <!-- PWA Settings -->
+  <link rel="manifest" href="./manifest.json" />
+  <meta name="theme-color" content="#e11d48" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="OurTimeline" />
+  <link rel="icon" type="image/svg+xml" href="./icons/icon.svg" />
+  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            rose: {
+              50: '#fff1f2',
+              100: '#ffe4e6',
+              200: '#fecdd3',
+              500: '#f43f5e',
+              600: '#e11d48',
+              700: '#be123c',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body class="bg-rose-50/40 text-slate-800 min-h-screen flex flex-col antialiased selection:bg-rose-200">
+
+  <!-- ヘッダー -->
+  <header class="sticky top-0 z-40 bg-white/85 backdrop-blur-md border-b border-rose-100 shadow-sm">
+    <div class="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+      <!-- ロゴ & 経過日数 -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-500 flex items-center justify-center text-white shadow-md shadow-rose-200">
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base font-black tracking-tight text-slate-900">OurTimeline</h1>
+            <span id="days-counter" class="px-2 py-0.5 rounded-full text-xs font-black bg-rose-50 text-rose-600 border border-rose-200">
+              Day --
+            </span>
+          </div>
+          <p id="anniversary-label" class="text-[11px] text-slate-500 font-medium">
+            ふたりの歩みと未来の約束
+          </p>
+        </div>
+      </div>
+
+      <!-- 右側アクション（招待・設定） -->
+      <div class="flex items-center gap-2">
+        <button id="btn-share-pair" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 hover:bg-rose-100 transition-colors border border-rose-200 shadow-sm" title="相手に共有する">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+          </svg>
+          <span class="hidden sm:inline">招待・共有</span>
+        </button>
+        <button id="btn-open-settings" type="button" class="p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors" title="設定">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ステータスバー（接続状況） -->
+  <div class="max-w-2xl mx-auto w-full px-4 pt-3 flex justify-between items-center text-xs">
+    <div id="sync-status" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+      <span class="w-2 h-2 rounded-full bg-slate-400"></span> 準備中...
+    </div>
+    <div class="text-[11px] text-slate-400">
+      夫婦2端末リアルタイム同期
+    </div>
+  </div>
+
+  <!-- メインコンテンツ: タイムライン -->
+  <main class="flex-grow max-w-2xl mx-auto w-full px-4 py-6 relative">
+    <div class="relative min-h-[60vh]">
+      <!-- タイムライン縦軸ライン -->
+      <div class="timeline-stem"></div>
+      
+      <!-- タイムライン要素マウントコンテナ -->
+      <div id="timeline-container" class="relative z-10 pb-28">
+        <!-- 動的にJavaScriptでレンダリングされます -->
+      </div>
+    </div>
+  </main>
+
+  <!-- 下部固定 フローティングアクションバー (片手操作最適化) -->
+  <div class="fixed bottom-0 left-0 right-0 z-30 pointer-events-none pb-4 safe-bottom">
+    <div class="max-w-2xl mx-auto px-4 flex justify-center pointer-events-auto">
+      <button id="btn-fab-create" type="button" class="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white rounded-full shadow-lg shadow-rose-300 transform active:scale-95 transition-all duration-150 font-bold text-sm tracking-wide">
+        <svg class="w-5 h-5 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
+        </svg>
+        <span>思い出・約束を記録</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== モーダル群 ==================== -->
+
+  <!-- 1. イベント登録/編集モーダル -->
+  <div id="event-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl modal-enter my-auto border border-slate-100">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h2 id="event-modal-title" class="text-lg font-bold text-slate-800">
+          ふたりの出来事を記録
+        </h2>
+        <button type="button" data-close-modal="event-modal" class="p-1 text-slate-400 hover:text-slate-600 rounded-full">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <form id="event-form" class="mt-4 space-y-4">
+        <!-- 日付 & カテゴリ -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="event-date" class="block text-xs font-bold text-slate-600 mb-1">日付 *</label>
+            <input type="date" id="event-date" required class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500" />
+          </div>
+          <div>
+            <label for="event-category" class="block text-xs font-bold text-slate-600 mb-1">カテゴリ</label>
+            <select id="event-category" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 bg-white">
+              <option value="life">🏡 暮らし</option>
+              <option value="trip">✈️ 旅行</option>
+              <option value="anniversary">💍 記念日</option>
+              <option value="future">✨ 未来の約束</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- タイトル -->
+        <div>
+          <label for="event-title" class="block text-xs font-bold text-slate-600 mb-1">タイトル *</label>
+          <input type="text" id="event-title" required placeholder="例: 金沢旅行、入籍、マイホーム契約" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500" />
+        </div>
+
+        <!-- 一言メモ -->
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <label for="event-memo" class="block text-xs font-bold text-slate-600">一言メモ</label>
+            <span id="memo-counter" class="text-[11px] text-slate-400">0 / 200</span>
+          </div>
+          <textarea id="event-memo" rows="3" maxlength="200" placeholder="楽しかったこと、ふたりで話したことなど (200文字以内)" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"></textarea>
+        </div>
+
+        <!-- 写真添付 (自動WebP圧縮) -->
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">写真 (長辺1200px・WebPに自動軽量化)</label>
+          <input type="file" id="event-photo-input" accept="image/*" class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-rose-50 file:text-rose-700 hover:file:bg-rose-100" />
+
+          <!-- プレビュー & 圧縮情報 -->
+          <div id="photo-preview-container" class="mt-3 relative hidden rounded-2xl overflow-hidden border border-slate-200 bg-slate-50">
+            <img id="photo-preview-img" src="" alt="プレビュー" class="w-full max-h-48 object-cover" />
+            <button type="button" id="btn-remove-photo" class="absolute top-2 right-2 p-1.5 bg-black/60 hover:bg-black/80 text-white rounded-full text-xs shadow">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+          <p id="photo-compression-info" class="text-[11px] text-emerald-600 font-medium mt-1 hidden"></p>
+        </div>
+
+        <div class="pt-3 flex gap-2">
+          <button type="button" data-close-modal="event-modal" class="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50">
+            キャンセル
+          </button>
+          <button type="submit" id="btn-save-event" class="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 text-white text-sm font-bold shadow-md hover:from-rose-600 hover:to-pink-600">
+            タイムラインに追加
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. パートナー招待・共有モーダル -->
+  <div id="share-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl modal-enter border border-slate-100">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+          <span>💌</span> パートナーを招待
+        </h2>
+        <button type="button" data-close-modal="share-modal" class="p-1 text-slate-400 hover:text-slate-600 rounded-full">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="mt-4 space-y-4 text-sm text-slate-600">
+        <p>
+          以下のURLをパートナー（夫・妻）にLINE等で送るだけで、<strong>パスワード不要でふたり専用のリアルタイム年表</strong>に即時ペアリングできます。
+        </p>
+
+        <div class="p-3 bg-rose-50/60 rounded-2xl border border-rose-100 space-y-2">
+          <label class="block text-xs font-bold text-rose-800">共有ペアリングURL</label>
+          <div class="flex gap-2">
+            <input type="text" id="share-url-input" readonly class="flex-grow px-3 py-2 bg-white border border-rose-200 rounded-xl text-xs text-slate-700 font-mono select-all focus:outline-none" />
+            <button type="button" id="btn-copy-share" class="px-3.5 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-bold shadow-sm whitespace-nowrap">
+              コピー
+            </button>
+          </div>
+          <p id="share-copy-feedback" class="text-xs text-emerald-600 font-bold hidden">コピーしました！</p>
+        </div>
+
+        <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-500 space-y-1">
+          <div class="flex items-center gap-1 text-slate-700 font-bold">
+            <svg class="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+            </svg>
+            <span>高セキュリティ保護</span>
+          </div>
+          <p>
+            URLには暗号学的な256bit秘密キーが含まれており、このURLを持つふたりだけが互いの思い出を閲覧・更新できます。第三者の閲覧や改ざんはDB層で厳格に遮断されます。
+          </p>
+        </div>
+
+        <div class="pt-2">
+          <button type="button" data-close-modal="share-modal" class="w-full py-2.5 px-4 rounded-xl bg-slate-100 text-slate-700 text-sm font-semibold hover:bg-slate-200">
+            閉じる
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. 設定モーダル -->
+  <div id="settings-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl modal-enter border border-slate-100">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h2 class="text-lg font-bold text-slate-800">
+          ⚙️ 設定
+        </h2>
+        <button type="button" data-close-modal="settings-modal" class="p-1 text-slate-400 hover:text-slate-600 rounded-full">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <form id="settings-form" class="mt-4 space-y-4">
+        <!-- 記念日設定 -->
+        <div class="space-y-3">
+          <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">記念日設定</h3>
+          <div>
+            <label for="setting-dating" class="block text-xs font-medium text-slate-600 mb-1">交際記念日（Day ○○の起点）</label>
+            <input type="date" id="setting-dating" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500" />
+          </div>
+          <div>
+            <label for="setting-marriage" class="block text-xs font-medium text-slate-600 mb-1">入籍・結婚記念日</label>
+            <input type="date" id="setting-marriage" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500" />
+          </div>
+        </div>
+
+        <!-- Supabase設定 -->
+        <div class="pt-2 border-t border-slate-100 space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Supabase 接続情報</h3>
+            <span class="text-[10px] text-slate-400">リアルタイム同期用</span>
+          </div>
+          <div>
+            <label for="setting-supabase-url" class="block text-xs font-medium text-slate-600 mb-1">Project URL</label>
+            <input type="url" id="setting-supabase-url" placeholder="https://xxxx.supabase.co" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-mono focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500" />
+          </div>
+          <div>
+            <label for="setting-supabase-key" class="block text-xs font-medium text-slate-600 mb-1">Anon API Key</label>
+            <input type="password" id="setting-supabase-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-mono focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500" />
+          </div>
+          <p class="text-[11px] text-slate-400 leading-relaxed">
+            ※空欄の場合はローカル（端末内）で動作します。入力するとSupabaseを介した2端末間での完全リアルタイム同期が開始されます。
+          </p>
+        </div>
+
+        <div class="pt-3 flex gap-2">
+          <button type="button" data-close-modal="settings-modal" class="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50">
+            閉じる
+          </button>
+          <button type="submit" class="flex-1 py-2.5 px-4 rounded-xl bg-rose-500 text-white text-sm font-bold shadow-md hover:bg-rose-600">
+            保存する
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4. 写真拡大ライトボックスモーダル -->
+  <div id="lightbox-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/90 backdrop-blur-md p-4">
+    <div class="relative max-w-3xl w-full flex flex-col items-center">
+      <button type="button" data-close-modal="lightbox-modal" class="absolute -top-12 right-0 p-2 text-white/80 hover:text-white rounded-full">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+      <img id="lightbox-img" src="" alt="拡大写真" class="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl" />
+      <p id="lightbox-caption" class="text-white text-sm font-semibold mt-3 text-center"></p>
+    </div>
+  </div>
+
+  <!-- Main JavaScript -->
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>

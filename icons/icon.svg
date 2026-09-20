@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f43f5e" />
+      <stop offset="100%" stop-color="#be123c" />
+    </linearGradient>
+    <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#ffe4e6" stop-opacity="0.6" />
+    </linearGradient>
+  </defs>
+  
+  <!-- 背景角丸スクエア -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)" />
+  
+  <!-- タイムライン縦軸光彩 -->
+  <line x1="256" y1="80" x2="256" y2="432" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-dasharray="16 12" opacity="0.5" />
+  
+  <!-- 過去・現在・未来の3つのノード -->
+  <circle cx="256" cy="130" r="14" fill="#ffffff" opacity="0.7" />
+  <circle cx="256" cy="382" r="14" fill="#ffffff" opacity="0.7" />
+
+  <!-- 中央の重なり合うハート（ふたりの絆・クロニクル） -->
+  <g transform="translate(256, 256) scale(1.1)">
+    <!-- 左ハート（ゴールド/ピンク） -->
+    <path d="M -30,-40 C -70,-80 -120,-30 -80,30 L 0,100 C -20,60 -50,10 -30,-40 Z" fill="#fecdd3" opacity="0.85" />
+    <!-- 右ハート -->
+    <path d="M 30,-40 C 70,-80 120,-30 80,30 L 0,100 C 20,60 50,10 30,-40 Z" fill="#ffe4e6" opacity="0.95" />
+    <!-- 中央メインハート -->
+    <path d="M 0,-20 C -45,-75 -90,-20 -50,35 L 0,90 L 50,35 C 90,-20 45,-75 0,-20 Z" fill="#ffffff" />
+    <!-- 小さなリングシンボル -->
+    <circle cx="0" cy="15" r="12" fill="none" stroke="#e11d48" stroke-width="4" />
+  </g>
+</svg>

@@ -1,0 +1,131 @@
+/* OurTimeline Custom Styles & Timeline Layout */
+
+:root {
+  --primary-rose: #e11d48;
+  --primary-rose-light: #ffe4e6;
+  --future-purple: #8b5cf6;
+}
+
+/* スクロールバーの非表示または細線化 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* タイムラインの主軸（縦線） */
+.timeline-stem {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 20px;
+  width: 3px;
+  background: linear-gradient(180deg, #a855f7 0%, #e11d48 40%, #f43f5e 70%, #fda4af 100%);
+  border-radius: 9999px;
+  z-index: 1;
+}
+
+@media (min-width: 640px) {
+  .timeline-stem {
+    left: 28px;
+  }
+}
+
+/* ノード（丸印） */
+.timeline-dot {
+  position: absolute;
+  left: 13px;
+  width: 17px;
+  height: 17px;
+  border-radius: 9999px;
+  border: 3px solid #ffffff;
+  z-index: 2;
+  box-shadow: 0 0 0 2px rgba(225, 29, 72, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+@media (min-width: 640px) {
+  .timeline-dot {
+    left: 21px;
+  }
+}
+
+/* TODAY マーカーライン */
+.today-marker-line {
+  position: relative;
+  margin: 2.5rem 0;
+  z-index: 5;
+}
+
+.today-marker-badge {
+  box-shadow: 0 4px 14px -2px rgba(225, 29, 72, 0.4);
+  animation: pulse-glow 2.5s infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 4px 14px -2px rgba(225, 29, 72, 0.4);
+  }
+  50% {
+    transform: scale(1.03);
+    box-shadow: 0 6px 20px 2px rgba(225, 29, 72, 0.6);
+  }
+}
+
+/* 未来の約束カード（点線ボーダー・半透明・グロー） */
+.future-card {
+  border: 2px dashed #c084fc !important;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  position: relative;
+}
+
+.future-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(243, 232, 255, 0.5) 0%, rgba(255, 255, 255, 0) 100%);
+  border-radius: 0.75rem;
+  pointer-events: none;
+}
+
+/* 過去の思い出カード（実線・ソリッド） */
+.past-card {
+  border: 1px solid #f1f5f9;
+  background: #ffffff;
+  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.05);
+}
+
+/* モバイルセーフエリア対応 */
+.safe-bottom {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+/* 写真拡大モーダルのズームアニメーション */
+.modal-enter {
+  animation: modal-fade-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes modal-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
