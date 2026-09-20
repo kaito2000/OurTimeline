@@ -250,7 +250,7 @@ export async function uploadPhotoToStorage(client, pairId, photoBlob) {
 }
 
 /**
- * Realtime API の購読を開始
+ * Realtime API の購読を開始（Broadcast + postgres_changes の二重構成）
  * @param {Object} client
  * @param {string} pairId
  * @param {Function} onInsert
@@ -267,7 +267,29 @@ export function subscribeToRealtime(client, pairId, { onInsert, onUpdate, onDele
   }
 
   realtimeChannel = client
-    .channel(`timeline_events_pair_${pairId}`)
+    .channel(`timeline_events_pair_${pairId}`, {
+      config: {
+        broadcast: { self: false } // 自身の送信イベントは重複処理しない
+      }
+    })
+    // 1. WebSocket Broadcast: RLSの影響を一切受けず0.1秒で相手端末に即時同期
+    .on(
+      'broadcast',
+      { event: 'timeline_change' },
+      ({ payload }) => {
+        console.log('[Supabase Realtime Broadcast] Event received:', payload);
+        if (!payload || !payload.action) return;
+
+        if (payload.action === 'INSERT' && onInsert) {
+          onInsert(payload.data);
+        } else if (payload.action === 'UPDATE' && onUpdate) {
+          onUpdate(payload.data);
+        } else if (payload.action === 'DELETE' && onDelete) {
+          onDelete(payload.data);
+        }
+      }
+    )
+    // 2. postgres_changes: DB更新時のフォールバック
     .on(
       'postgres_changes',
       {
@@ -277,6 +299,7 @@ export function subscribeToRealtime(client, pairId, { onInsert, onUpdate, onDele
         filter: `pair_id=eq.${pairId}`
       },
       (payload) => {
+        console.log('[Supabase postgres_changes] INSERT:', payload);
         if (onInsert) onInsert(payload.new);
       }
     )
@@ -289,6 +312,7 @@ export function subscribeToRealtime(client, pairId, { onInsert, onUpdate, onDele
         filter: `pair_id=eq.${pairId}`
       },
       (payload) => {
+        console.log('[Supabase postgres_changes] UPDATE:', payload);
         if (onUpdate) onUpdate(payload.new);
       }
     )
@@ -301,6 +325,7 @@ export function subscribeToRealtime(client, pairId, { onInsert, onUpdate, onDele
         filter: `pair_id=eq.${pairId}`
       },
       (payload) => {
+        console.log('[Supabase postgres_changes] DELETE:', payload);
         if (onDelete) onDelete(payload.old);
       }
     )
@@ -309,4 +334,23 @@ export function subscribeToRealtime(client, pairId, { onInsert, onUpdate, onDele
     });
 
   return realtimeChannel;
+}
+
+/**
+ * ペアの相手端末へリアルタイムにイベント変更をブロードキャスト
+ * @param {'INSERT' | 'UPDATE' | 'DELETE'} action
+ * @param {Object} data
+ */
+export function broadcastTimelineChange(action, data) {
+  if (!realtimeChannel) return;
+  try {
+    realtimeChannel.send({
+      type: 'broadcast',
+      event: 'timeline_change',
+      payload: { action, data }
+    });
+    console.log(`[Supabase Realtime Broadcast] Sent ${action}:`, data?.id || data);
+  } catch (err) {
+    console.warn('broadcastTimelineChange warning:', err);
+  }
 }

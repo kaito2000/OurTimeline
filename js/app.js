@@ -11,7 +11,8 @@ import {
   updateRemoteEvent,
   deleteRemoteEvent,
   uploadPhotoToStorage,
-  subscribeToRealtime
+  subscribeToRealtime,
+  broadcastTimelineChange
 } from './supabaseClient.js';
 import { renderTimeline, calculateDaysCount } from './timelineRenderer.js';
 import { ModalController } from './modalController.js';
@@ -106,7 +107,7 @@ class App {
     // 6. Service Worker登録 (PWA)
     this.registerServiceWorker();
 
-    // 7. オンライン/オフライン検知
+    // 7. オンライン/オフライン検知 & 自動同期ポーリング
     window.addEventListener('online', () => {
       store.setOnlineStatus(true);
       this.initSupabaseSync();
@@ -114,6 +115,8 @@ class App {
     window.addEventListener('offline', () => {
       store.setOnlineStatus(false);
     });
+
+    this.setupAutoSyncPolling();
   }
 
   bindGlobalUiEvents() {
@@ -348,13 +351,15 @@ class App {
     // 2. ローカルに即座に反映（楽観的UI更新）
     store.upsertEvent(payload);
 
-    // 3. Supabase DBへ永続化
+    // 3. Supabase DBへ永続化 & Realtime Broadcast送信
     if (this.supabase) {
       try {
         if (eventData.id) {
           await updateRemoteEvent(this.supabase, payload.id, payload);
+          broadcastTimelineChange('UPDATE', payload);
         } else {
           await insertTimelineEvent(this.supabase, payload);
+          broadcastTimelineChange('INSERT', payload);
         }
       } catch (err) {
         console.error('Remote save error:', err);
@@ -367,6 +372,7 @@ class App {
     if (updated && this.supabase) {
       try {
         await updateRemoteEvent(this.supabase, eventId, { is_completed: updated.is_completed });
+        broadcastTimelineChange('UPDATE', updated);
       } catch (err) {
         console.error('Remote update completion error:', err);
       }
@@ -383,6 +389,7 @@ class App {
     if (this.supabase) {
       try {
         await deleteRemoteEvent(this.supabase, event.id);
+        broadcastTimelineChange('DELETE', { id: event.id });
       } catch (err) {
         console.error('Remote delete error:', err);
       }
@@ -423,6 +430,47 @@ class App {
           console.log('ServiceWorker registration failed:', err);
         });
       });
+    }
+  }
+
+  setupAutoSyncPolling() {
+    // 画面がアクティブになった時（スマホの画面点灯、別アプリから戻った時など）に即時同期
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && this.supabase) {
+        this.refreshRemoteTimelineSilent();
+      }
+    });
+
+    window.addEventListener('focus', () => {
+      if (this.supabase) {
+        this.refreshRemoteTimelineSilent();
+      }
+    });
+
+    // 画面を開いている間、10秒ごとにサイレント同期（ポーリング）
+    setInterval(() => {
+      if (this.supabase && store.state.isOnline && document.visibilityState === 'visible') {
+        this.refreshRemoteTimelineSilent();
+      }
+    }, 10000);
+  }
+
+  async refreshRemoteTimelineSilent() {
+    const pairId = store.state.pairId;
+    if (!this.supabase || !pairId) return;
+    try {
+      const remoteEvents = await fetchRemoteTimeline(this.supabase, pairId);
+      if (remoteEvents && Array.isArray(remoteEvents)) {
+        const currentEvents = store.state.events;
+        const currentJson = JSON.stringify(currentEvents);
+        const remoteJson = JSON.stringify(remoteEvents);
+        if (currentJson !== remoteJson) {
+          console.log('[AutoSync] Remote changes detected, updating state...');
+          store.setRemoteEvents(remoteEvents);
+        }
+      }
+    } catch (e) {
+      console.debug('[AutoSync] poll notice:', e.message);
     }
   }
 }
