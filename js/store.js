@@ -281,6 +281,101 @@ export class Store {
     this.notify();
     return event;
   }
+
+  /**
+   * 別のペアに参加する（招待コード／URL入力時）
+   * @param {Object} credentials
+   */
+  joinPair({ pairId, secretKey, supabaseUrl, supabaseAnonKey }) {
+    if (!pairId) return false;
+
+    this.state.pairId = pairId;
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(CONFIG.STORAGE_KEYS.PAIR_ID, pairId);
+    }
+
+    if (secretKey) {
+      this.state.secretKey = secretKey;
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(CONFIG.STORAGE_KEYS.PAIR_SECRET_KEY, secretKey);
+      }
+    }
+
+    if (supabaseUrl) {
+      this.state.supabaseUrl = supabaseUrl;
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(CONFIG.STORAGE_KEYS.CUSTOM_SUPABASE_URL, supabaseUrl);
+      }
+    }
+
+    if (supabaseAnonKey) {
+      this.state.supabaseAnonKey = supabaseAnonKey;
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(CONFIG.STORAGE_KEYS.CUSTOM_SUPABASE_KEY, supabaseAnonKey);
+      }
+    }
+
+    // 古いペアのローカルイベントをクリアしてリモート同期に備える
+    this.state.events = [];
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem(CONFIG.STORAGE_KEYS.CACHED_EVENTS);
+    }
+
+    this.state.syncStatus = (this.state.supabaseUrl && this.state.supabaseAnonKey) ? 'connecting' : 'unconfigured';
+    this.notify();
+    return true;
+  }
+}
+
+/**
+ * 招待コードまたは共有URLの解析
+ * @param {string} rawInput
+ * @returns {{ pairId: string, secretKey?: string, supabaseUrl?: string, supabaseAnonKey?: string } | null}
+ */
+export function parseInviteString(rawInput) {
+  if (!rawInput || typeof rawInput !== 'string') return null;
+  const input = rawInput.trim();
+
+  // 1. URL形式（https://...?pair=... または ?pair=...）
+  if (input.includes('pair=') || input.includes('http://') || input.includes('https://')) {
+    try {
+      let search = input;
+      if (input.includes('?')) {
+        search = input.substring(input.indexOf('?'));
+      }
+      const params = new URLSearchParams(search);
+      const pairId = params.get('pair');
+      const secretKey = params.get('key');
+      const supabaseUrl = params.get('su') || undefined;
+      const supabaseAnonKey = params.get('sk') || undefined;
+
+      if (pairId) {
+        return { pairId, secretKey: secretKey || undefined, supabaseUrl, supabaseAnonKey };
+      }
+    } catch (e) {
+      // パース失敗時は下へフォールバック
+    }
+  }
+
+  // 2. トークン形式: pairId:secretKey または pairId:secretKey:supabaseUrl:supabaseAnonKey
+  if (input.includes(':')) {
+    const parts = input.split(':');
+    if (parts.length >= 2) {
+      return {
+        pairId: parts[0].trim(),
+        secretKey: parts[1].trim(),
+        supabaseUrl: parts[2]?.trim() || undefined,
+        supabaseAnonKey: parts[3]?.trim() || undefined
+      };
+    }
+  }
+
+  // 3. 単体UUID形式（pairId のみ）
+  if (/^[0-9a-fA-F-]{36}$/.test(input)) {
+    return { pairId: input };
+  }
+
+  return null;
 }
 
 export const store = new Store();

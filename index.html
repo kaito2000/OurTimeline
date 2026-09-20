@@ -212,7 +212,18 @@
         </button>
       </div>
 
-      <div class="mt-4 space-y-4 text-xs sm:text-sm text-slate-600">
+      <!-- タブ切り替え -->
+      <div class="flex border-b border-slate-200 mt-2">
+        <button type="button" id="tab-btn-share" class="flex-1 pb-2.5 text-xs sm:text-sm font-bold border-b-2 border-emerald-600 text-emerald-800 transition-colors">
+          📤 招待する（コード発行）
+        </button>
+        <button type="button" id="tab-btn-join" class="flex-1 pb-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition-colors">
+          📥 参加する（コード入力）
+        </button>
+      </div>
+
+      <!-- 1. 招待するタブコンテンツ -->
+      <div id="tab-content-share" class="mt-4 space-y-4 text-xs sm:text-sm text-slate-600">
         <p class="leading-relaxed">
           以下の共有URLをLINE等でパートナーに送るだけで、<strong>Supabaseの接続設定もペアリングもすべて自動で完了</strong>します（パートナー側でのURLやキーの入力は一切不要です）。
         </p>
@@ -226,7 +237,7 @@
         </div>
 
         <div class="p-3.5 bg-emerald-50/70 rounded-2xl border border-emerald-100 space-y-2">
-          <label class="block text-[11px] font-bold text-emerald-900">共有ペアリングURL</label>
+          <label class="block text-[11px] font-bold text-emerald-900">共有ペアリングURL / 招待コード</label>
           <div class="flex gap-2">
             <input type="text" id="share-url-input" readonly class="flex-grow px-3 py-2 bg-white border border-emerald-200 rounded-xl text-xs text-slate-700 font-mono select-all focus:outline-none" />
             <button type="button" id="btn-copy-share" class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold shadow-sm shadow-emerald-200 whitespace-nowrap active:scale-95 transition-all">
@@ -241,7 +252,7 @@
             <span>💡</span> パートナーへの共有のコツ
           </p>
           <p class="text-[11px] text-amber-800 leading-relaxed">
-            LINE等で送った場合、LINEの画面内ではなく<strong>右上のメニューから「Safariで開く」</strong>をタップして開いてください。ふたりのデータが安定して同期されます。
+            LINE等で送ったコードをパートナーがコピーし、ホーム画面のアプリを開いて「📥 参加する」タブから貼り付けることで、確実に同期合流できます。
           </p>
         </div>
 
@@ -254,6 +265,39 @@
           </div>
           <p>
             URLに含まれる256bitの暗号秘密鍵によって、このリンクを持つふたりだけが互いの思い出を更新・閲覧できます。第三者の閲覧や改ざんはDB層で厳格に遮断されます。
+          </p>
+        </div>
+
+        <div class="pt-2">
+          <button type="button" data-close-modal="share-modal" class="w-full py-2.5 px-4 rounded-2xl bg-slate-100 text-slate-700 text-xs sm:text-sm font-bold hover:bg-slate-200 transition-colors">
+            閉じる
+          </button>
+        </div>
+      </div>
+
+      <!-- 2. 参加するタブコンテンツ -->
+      <div id="tab-content-join" class="mt-4 space-y-4 text-xs sm:text-sm text-slate-600 hidden">
+        <p class="leading-relaxed">
+          パートナーから受け取った<strong>招待コード</strong>または<strong>共有URL</strong>を貼り付けてください。ふたりの年表に即座に合流・同期されます。
+        </p>
+
+        <div class="p-3.5 bg-emerald-50/70 rounded-2xl border border-emerald-100 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <label for="input-join-code" class="block text-[11px] font-bold text-emerald-900">招待コード / 共有URL</label>
+            <button type="button" id="btn-paste-join" class="text-[11px] text-emerald-700 font-bold hover:underline flex items-center gap-1">
+              📋 クリップボードから貼り付け
+            </button>
+          </div>
+          <textarea id="input-join-code" rows="3" placeholder="LINE等で届いたURLまたはコードを貼り付け..." class="w-full px-3 py-2 bg-white border border-emerald-200 rounded-xl text-xs text-slate-700 font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500/20"></textarea>
+          <button type="button" id="btn-submit-join" class="w-full py-2.5 px-4 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-emerald-200 active:scale-95 transition-all">
+            ふたりのペアに参加して同期する
+          </button>
+        </div>
+
+        <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-500 space-y-1">
+          <p class="font-bold text-slate-700">💡 アプリ（ホーム画面）でのご利用について</p>
+          <p class="text-[11px] leading-relaxed">
+            ホーム画面に追加したアプリアイコンを開き、この画面でコードを入力して参加すれば、次回以降も自動的にふたりの同期が保たれます。
           </p>
         </div>
 
@@ -339,6 +383,6 @@
   </div>
 
   <!-- Main JavaScript -->
-  <script type="module" src="./js/app.js?v=1.9.1"></script>
+  <script type="module" src="./js/app.js?v=1.9.2"></script>
 </body>
 </html>

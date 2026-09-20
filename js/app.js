@@ -85,7 +85,8 @@ class App {
     this.modalController = new ModalController(store, {
       onSaveEvent: (eventData, photoBlob, photoDataUrl) => this.handleSaveEvent(eventData, photoBlob, photoDataUrl),
       onDeleteEvent: (event) => this.handleDeleteEvent(event),
-      onSaveSettings: (settings) => this.handleSaveSettings(settings)
+      onSaveSettings: (settings) => this.handleSaveSettings(settings),
+      onJoinPair: (credentials) => this.handleJoinPair(credentials)
     });
 
     // 3. UIイベントのバインド
@@ -401,6 +402,16 @@ class App {
       }
     }
     this.initSupabaseSync();
+  }
+
+  async handleJoinPair({ pairId, secretKey, supabaseUrl, supabaseAnonKey }) {
+    console.log('招待コードによりペアに参加中...', pairId);
+    store.joinPair({ pairId, secretKey, supabaseUrl, supabaseAnonKey });
+
+    // Supabaseへの再接続・データ取得
+    await this.initSupabaseSync();
+
+    alert('🎉 ふたりのペアに参加しました！リアルタイム同期を開始します。');
   }
 
   registerServiceWorker() {

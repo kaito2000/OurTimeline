@@ -61,3 +61,53 @@ test('Store manages state and notifications', () => {
   store.setOnlineStatus(false);
   assert.equal(notificationCount, currentCount); // 増えないこと
 });
+
+test('parseInviteString correctly parses URLs and tokens', async () => {
+  const { parseInviteString } = await import('../js/store.js');
+
+  // 1. フルURL形式
+  const url1 = 'https://kaito2000.github.io/OurTimeline/?pair=123e4567-e89b-12d3-a456-426614174000&key=abcdef123456&su=https://test.supabase.co&sk=anon-key-xyz';
+  const parsed1 = parseInviteString(url1);
+  assert.ok(parsed1);
+  assert.equal(parsed1.pairId, '123e4567-e89b-12d3-a456-426614174000');
+  assert.equal(parsed1.secretKey, 'abcdef123456');
+  assert.equal(parsed1.supabaseUrl, 'https://test.supabase.co');
+  assert.equal(parsed1.supabaseAnonKey, 'anon-key-xyz');
+
+  // 2. パラメータのみの形式
+  const url2 = '?pair=my-pair-id&key=my-key';
+  const parsed2 = parseInviteString(url2);
+  assert.ok(parsed2);
+  assert.equal(parsed2.pairId, 'my-pair-id');
+  assert.equal(parsed2.secretKey, 'my-key');
+
+  // 3. トークン形式 (pair:key)
+  const token = 'my-pair-id:my-key-secret';
+  const parsed3 = parseInviteString(token);
+  assert.ok(parsed3);
+  assert.equal(parsed3.pairId, 'my-pair-id');
+  assert.equal(parsed3.secretKey, 'my-key-secret');
+
+  // 4. 不正な文字列
+  assert.equal(parseInviteString(''), null);
+  assert.equal(parseInviteString('hello-world'), null);
+});
+
+test('Store joinPair updates credentials and clears old cache', () => {
+  const store = new Store();
+  store.state.events = [{ id: 'old-event-1', title: '古いイベント' }];
+
+  const result = store.joinPair({
+    pairId: 'new-pair-id',
+    secretKey: 'new-secret-key',
+    supabaseUrl: 'https://new.supabase.co',
+    supabaseAnonKey: 'new-key'
+  });
+
+  assert.equal(result, true);
+  assert.equal(store.state.pairId, 'new-pair-id');
+  assert.equal(store.state.secretKey, 'new-secret-key');
+  assert.equal(store.state.supabaseUrl, 'https://new.supabase.co');
+  assert.equal(store.state.supabaseAnonKey, 'new-key');
+  assert.equal(store.state.events.length, 0); // 古いキャッシュがクリアされていること
+});

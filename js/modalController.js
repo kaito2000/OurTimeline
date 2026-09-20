@@ -1,6 +1,7 @@
 // Modal Controller - 各種ダイアログとフォーム操作
 import { CONFIG } from './config.js';
 import { compressImageToWebP } from './imageCompressor.js';
+import { parseInviteString } from './store.js';
 
 export class ModalController {
   constructor(store, callbacks = {}) {
@@ -37,12 +38,19 @@ export class ModalController {
     this.lightboxImg = document.getElementById('lightbox-img');
     this.lightboxCaption = document.getElementById('lightbox-caption');
 
-    // ペアリング招待モーダル
+    // ペアリング招待・参加モーダル
     this.shareModal = document.getElementById('share-modal');
     this.shareUrlInput = document.getElementById('share-url-input');
     this.btnCopyShare = document.getElementById('btn-copy-share');
     this.shareCopyFeedback = document.getElementById('share-copy-feedback');
     this.pairIdDisplay = document.getElementById('pair-id-display');
+    this.tabBtnShare = document.getElementById('tab-btn-share');
+    this.tabBtnJoin = document.getElementById('tab-btn-join');
+    this.tabContentShare = document.getElementById('tab-content-share');
+    this.tabContentJoin = document.getElementById('tab-content-join');
+    this.inputJoinCode = document.getElementById('input-join-code');
+    this.btnPasteJoin = document.getElementById('btn-paste-join');
+    this.btnSubmitJoin = document.getElementById('btn-submit-join');
 
     // 設定モーダル
     this.settingsModal = document.getElementById('settings-modal');
@@ -124,6 +132,57 @@ export class ModalController {
           document.execCommand('copy');
           this.showCopyFeedback('URLをコピーしました！');
         }
+      });
+    }
+
+    // タブ切り替え
+    if (this.tabBtnShare && this.tabBtnJoin) {
+      this.tabBtnShare.addEventListener('click', () => {
+        this.switchShareTab('share');
+      });
+      this.tabBtnJoin.addEventListener('click', () => {
+        this.switchShareTab('join');
+      });
+    }
+
+    // クリップボード貼り付け
+    if (this.btnPasteJoin && this.inputJoinCode) {
+      this.btnPasteJoin.addEventListener('click', async () => {
+        try {
+          if (navigator.clipboard && navigator.clipboard.readText) {
+            const text = await navigator.clipboard.readText();
+            if (text) {
+              this.inputJoinCode.value = text.trim();
+            }
+          } else {
+            alert('お使いの環境では自動貼り付けに対応していません。入力枠内を長押しして「ペースト」してください。');
+          }
+        } catch (err) {
+          alert('クリップボードの読み取り許可が得られませんでした。入力枠内を長押しして直接貼り付けてください。');
+        }
+      });
+    }
+
+    // ペアに参加して同期する
+    if (this.btnSubmitJoin && this.inputJoinCode) {
+      this.btnSubmitJoin.addEventListener('click', () => {
+        const rawCode = this.inputJoinCode.value.trim();
+        if (!rawCode) {
+          alert('招待コードまたは共有URLを入力してください。');
+          return;
+        }
+
+        const parsed = parseInviteString(rawCode);
+        if (!parsed || !parsed.pairId) {
+          alert('招待コードまたは共有URLの形式が正しくありません。\n送られてきたURLやコードをそのまま貼り付けてください。');
+          return;
+        }
+
+        if (this.callbacks.onJoinPair) {
+          this.callbacks.onJoinPair(parsed);
+        }
+        this.closeModal(this.shareModal);
+        this.inputJoinCode.value = '';
       });
     }
 
@@ -293,7 +352,26 @@ export class ModalController {
       }
     }
 
+    this.switchShareTab('share');
     this.openModal(this.shareModal);
+  }
+
+  switchShareTab(tab) {
+    if (!this.tabBtnShare || !this.tabBtnJoin || !this.tabContentShare || !this.tabContentJoin) return;
+    if (tab === 'share') {
+      this.tabBtnShare.className = 'flex-1 pb-2.5 text-xs sm:text-sm font-bold border-b-2 border-emerald-600 text-emerald-800 transition-colors';
+      this.tabBtnJoin.className = 'flex-1 pb-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition-colors';
+      this.tabContentShare.classList.remove('hidden');
+      this.tabContentJoin.classList.add('hidden');
+    } else {
+      this.tabBtnShare.className = 'flex-1 pb-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition-colors';
+      this.tabBtnJoin.className = 'flex-1 pb-2.5 text-xs sm:text-sm font-bold border-b-2 border-emerald-600 text-emerald-800 transition-colors';
+      this.tabContentShare.classList.add('hidden');
+      this.tabContentJoin.classList.remove('hidden');
+      if (this.inputJoinCode) {
+        setTimeout(() => this.inputJoinCode.focus(), 100);
+      }
+    }
   }
 
   openSettingsModal() {
