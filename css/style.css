@@ -209,10 +209,24 @@ body {
 
 /* iPhone / モバイル セーフエリア対応 (Notch / Dynamic Island 対策) */
 .safe-top {
-  padding-top: env(safe-area-inset-top, 0px);
+  /* 基本フォールバック（envが0pxを返すiOS PWA不具合対策として最低48px=3remを確保） */
+  padding-top: max(3rem, env(safe-area-inset-top, 3rem));
+}
+
+/* ホーム画面追加（PWAスタンドアローン）時のDynamic Island対応マージン */
+@media all and (display-mode: standalone) {
+  .safe-top {
+    /* iPhone 14 Pro / 15 / 16等のDynamic Island（約54〜59px）にも被らないよう最低60px=3.75remを確保 */
+    padding-top: max(3.75rem, env(safe-area-inset-top, 3.75rem)) !important;
+  }
+}
+
+/* iOS Safari PWA standalone検出フォールバック */
+.standalone-ios .safe-top {
+  padding-top: max(3.75rem, env(safe-area-inset-top, 3.75rem)) !important;
 }
 
 .safe-bottom {
-  padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 1.25rem));
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 1.5rem));
 }
 
