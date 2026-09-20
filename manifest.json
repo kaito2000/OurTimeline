@@ -4,8 +4,8 @@
   "description": "ふたりの歩んできた軌跡とこれからの未来を1本の美しい年表として可視化する夫婦専用リアルタイムタイムライン",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#fff1f2",
-  "theme_color": "#e11d48",
+  "background_color": "#f4f7f4",
+  "theme_color": "#2d6a4f",
   "orientation": "portrait-primary",
   "icons": [
     {

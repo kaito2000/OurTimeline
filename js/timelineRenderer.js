@@ -1,4 +1,4 @@
-// Timeline Renderer - DOM生成 & タイムライン描画モジュール (Modern Edition)
+// Timeline Renderer - DOM生成 & タイムライン描画モジュール (Natural Green Edition)
 import { CONFIG } from './config.js';
 
 /**
@@ -16,7 +16,7 @@ export function calculateDaysCount(fromDateString, toDateString) {
   to.setHours(0, 0, 0, 0);
 
   const diffTime = to.getTime() - from.getTime();
-  return Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1; // 1日目をDay 1とする
+  return Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
 }
 
 /**
@@ -65,7 +65,7 @@ export function renderTimeline(container, events, options = {}) {
     const eventYear = event.event_date.split('-')[0];
     const isFuture = event.event_date > todayStr;
 
-    // 1. TODAY マーカーの挿入チェック（未来イベントが終わり、過去イベントが始まる境界）
+    // 1. TODAY マーカーの挿入チェック
     if (!todayMarkerInserted && !isFuture) {
       container.appendChild(createTodayMarkerElement(todayStr));
       todayMarkerInserted = true;
@@ -92,7 +92,7 @@ export function renderTimeline(container, events, options = {}) {
     const emptyNotice = document.createElement('div');
     emptyNotice.className = 'text-center py-16 px-4';
     emptyNotice.innerHTML = `
-      <div class="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-rose-50 text-rose-500 mb-4 shadow-sm border border-rose-100">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-700 mb-4 shadow-sm border border-emerald-100">
         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
         </svg>
@@ -107,19 +107,19 @@ export function renderTimeline(container, events, options = {}) {
 }
 
 /**
- * TODAYマーカーDOMの生成（洗練されたモダンピルスタイル）
+ * TODAYマーカーDOMの生成（自然なフォレストグリーンスタイル）
  */
 function createTodayMarkerElement(todayStr) {
   const marker = document.createElement('div');
   marker.className = 'today-marker-container flex items-center justify-center my-8 relative';
   marker.innerHTML = `
     <div class="absolute inset-0 flex items-center" aria-hidden="true">
-      <div class="w-full border-t border-rose-300/60 border-dashed"></div>
+      <div class="w-full border-t border-emerald-300/70 border-dashed"></div>
     </div>
     <div class="relative flex items-center gap-2 px-4 py-1.5 today-glow-badge text-white text-[11px] font-black rounded-full shadow-lg tracking-wider uppercase">
       <span class="relative flex h-2 w-2">
-        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-        <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-200 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-300"></span>
       </span>
       <span>TODAY</span>
       <span class="opacity-75 font-normal">|</span>
@@ -136,16 +136,16 @@ function createYearSeparatorElement(year) {
   const separator = document.createElement('div');
   separator.className = 'relative flex items-center my-6 ml-5 sm:ml-7';
   separator.innerHTML = `
-    <div class="z-10 px-3.5 py-1 bg-white/90 backdrop-blur-md text-slate-700 border border-slate-200/80 rounded-full text-[11px] font-extrabold tracking-widest shadow-sm font-display">
+    <div class="z-10 px-3.5 py-1 bg-white/95 backdrop-blur-md text-slate-700 border border-emerald-100 rounded-full text-[11px] font-extrabold tracking-widest shadow-sm font-display">
       ${year}
     </div>
-    <div class="flex-grow border-t border-slate-200/70 ml-3"></div>
+    <div class="flex-grow border-t border-emerald-100 ml-3"></div>
   `;
   return separator;
 }
 
 /**
- * 個別イベントカードDOMの生成（モダンデザイン）
+ * 個別イベントカードDOMの生成（ナチュラルデザイン）
  */
 function createEventCardElement(event, isFuture, options) {
   const cardWrapper = document.createElement('div');
@@ -155,7 +155,6 @@ function createEventCardElement(event, isFuture, options) {
   const categoryMeta = CONFIG.CATEGORIES[event.category] || CONFIG.CATEGORIES.life;
   const isCompleted = event.is_completed !== false;
 
-  // ノードクラス（未来ならパープル、過去ならローズ）
   const dotClass = isFuture && !isCompleted ? 'timeline-dot-ring timeline-dot-future' : 'timeline-dot-ring';
   const cardClass = isFuture && !isCompleted ? 'modern-card future-event-card' : 'modern-card past-event-card';
 
@@ -176,13 +175,13 @@ function createEventCardElement(event, isFuture, options) {
             <span>${categoryMeta.label}</span>
           </span>
           ${isFuture && !isCompleted ? `
-            <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 border border-purple-200 rounded-full text-[10px] font-black tracking-wide">
-              <span class="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse"></span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-teal-50 text-teal-800 border border-teal-200/80 rounded-full text-[10px] font-black tracking-wide">
+              <span class="w-1.5 h-1.5 rounded-full bg-teal-600 animate-pulse"></span>
               未来の約束
             </span>
           ` : ''}
           ${isFuture && isCompleted ? `
-            <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-[10px] font-bold">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full text-[10px] font-bold">
               ✓ 約束達成
             </span>
           ` : ''}
@@ -217,7 +216,7 @@ function createEventCardElement(event, isFuture, options) {
 
       <!-- 写真 (ある場合) -->
       ${event.photo_url ? `
-        <div class="mt-2.5 mb-2 overflow-hidden rounded-2xl bg-slate-100 border border-slate-200/60 shadow-sm relative group/photo">
+        <div class="mt-2.5 mb-2 overflow-hidden rounded-2xl bg-slate-100 border border-emerald-100/70 shadow-sm relative group/photo">
           <img
             src="${event.photo_url}"
             alt="${escapeHtml(event.title)}"
@@ -234,14 +233,14 @@ function createEventCardElement(event, isFuture, options) {
 
       <!-- 未来イベント用の達成アクションボタン -->
       ${isFuture ? `
-        <div class="mt-3 pt-3 border-t border-purple-100/80 flex items-center justify-between gap-2">
-          <span class="text-[11px] text-purple-700 font-medium">
-            ${isCompleted ? '🎉 約束が叶いました！' : '✨ ふたりで叶えたい未来の予定'}
+        <div class="mt-3 pt-3 border-t border-emerald-100 flex items-center justify-between gap-2">
+          <span class="text-[11px] text-emerald-800 font-medium">
+            ${isCompleted ? '🎉 約束が叶いました！' : '🌱 ふたりで叶えたい未来の予定'}
           </span>
           <button type="button" class="btn-toggle-complete inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm active:scale-95 ${
             isCompleted 
               ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' 
-              : 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 shadow-purple-200'
+              : 'bg-gradient-to-r from-emerald-600 to-teal-700 text-white hover:from-emerald-700 hover:to-teal-800 shadow-emerald-200'
           }">
             ${isCompleted ? '未達成に戻す' : '✨ 達成した！'}
           </button>
@@ -250,7 +249,6 @@ function createEventCardElement(event, isFuture, options) {
     </div>
   `;
 
-  // イベントバインド
   const btnEdit = cardWrapper.querySelector('.btn-edit');
   if (btnEdit && options.onEdit) {
     btnEdit.addEventListener('click', () => options.onEdit(event));

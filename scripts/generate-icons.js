@@ -1,19 +1,17 @@
 import fs from 'fs';
 import zlib from 'zlib';
 
-function createModernPNG(width, height) {
-  // PNG signature
+function createNaturalPNG(width, height) {
   const signature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 
-  // IHDR
   const ihdr = Buffer.alloc(13);
   ihdr.writeUInt32BE(width, 0);
   ihdr.writeUInt32BE(height, 4);
-  ihdr[8] = 8; // bit depth
-  ihdr[9] = 6; // color type (RGBA: 4 channels)
-  ihdr[10] = 0; // compression method
-  ihdr[11] = 0; // filter method
-  ihdr[12] = 0; // interlace method
+  ihdr[8] = 8;
+  ihdr[9] = 6; // RGBA
+  ihdr[10] = 0;
+  ihdr[11] = 0;
+  ihdr[12] = 0;
 
   function createChunk(type, data) {
     const len = data.length;
@@ -40,10 +38,9 @@ function createModernPNG(width, height) {
 
   const ihdrChunk = createChunk('IHDR', ihdr);
 
-  // RGBA with filter byte 0
   const scanlineWidth = width * 4 + 1;
   const rawData = Buffer.alloc(height * scanlineWidth);
-  const cornerRadius = width * 0.22; // iOS風角丸
+  const cornerRadius = width * 0.22;
 
   for (let y = 0; y < height; y++) {
     const rowOffset = y * scanlineWidth;
@@ -80,35 +77,56 @@ function createModernPNG(width, height) {
         continue;
       }
 
-      // 洗練されたサンセットローズグラデーション
-      // 左上: #ff758c, 中央: #e11d48, 右下: #880e4f
+      // 自然なセージグリーン〜フォレストグリーン〜ディープモス グラデーション
+      // 上部: #52b788, 中央: #2d6a4f, 下部: #1b4332 / #081c15
       const nx = x / width;
       const ny = y / height;
 
-      // ラジアル距離
-      const dCenter = Math.sqrt((nx - 0.4) ** 2 + (ny - 0.35) ** 2);
-      
-      let r = 255 - Math.floor(dCenter * 90);
-      let g = 80 - Math.floor(ny * 60) + Math.floor(nx * 30);
-      let b = 120 + Math.floor(dCenter * 40) - Math.floor(nx * 40);
+      // ラジアル距離（左上からの太陽光・木漏れ日感）
+      const dSun = Math.sqrt((nx - 0.25) ** 2 + (ny - 0.2) ** 2);
 
-      r = Math.max(136, Math.min(255, r));
-      g = Math.max(14, Math.min(130, g));
-      b = Math.max(50, Math.min(150, b));
+      let r = Math.floor(82 * (1 - ny * 0.7) + 30 * (1 - dSun));
+      let g = Math.floor(183 * (1 - ny * 0.65) + 40 * (1 - dSun));
+      let b = Math.floor(136 * (1 - ny * 0.75) + 25 * (1 - dSun));
 
-      // 中央のハート・シンボルシルエットの微かな描画
-      const hx = (nx - 0.5) * 2;
-      const hy = (ny - 0.52) * 2;
-      // ハート関数 (x^2 + y^2 - 0.4)^3 - x^2 * y^3 < 0
-      const aVal = hx * hx + hy * hy - 0.42;
-      const heartShape = aVal * aVal * aVal - hx * hx * hy * hy * hy;
+      r = Math.max(8, Math.min(216, r));
+      g = Math.max(28, Math.min(243, g));
+      b = Math.max(21, Math.min(220, b));
 
-      if (heartShape <= 0.05) {
-        // ハート内・周辺をホワイト＆ゴールド発光
-        const blend = Math.max(0, Math.min(1, (0.05 - heartShape) * 15));
-        r = Math.floor(r * (1 - blend) + 255 * blend);
-        g = Math.floor(g * (1 - blend) + 240 * blend);
-        b = Math.floor(b * (1 - blend) + 245 * blend);
+      // タイムラインの縦線（xが中央付近）
+      const cx = width / 2;
+      const xDiff = Math.abs(x - cx);
+      if (xDiff <= 2 && ny >= 0.15 && ny <= 0.85) {
+        // 白い光の幹
+        const lineAlpha = 1 - (xDiff / 3);
+        r = Math.floor(r * (1 - lineAlpha * 0.7) + 255 * lineAlpha * 0.7);
+        g = Math.floor(g * (1 - lineAlpha * 0.7) + 255 * lineAlpha * 0.7);
+        b = Math.floor(b * (1 - lineAlpha * 0.7) + 255 * lineAlpha * 0.7);
+      }
+
+      // 対をなす若葉（リーフ）シンボル（ハートではない自然の芽吹き）
+      // 左葉: (nx: 0.35~0.5, ny: 0.35~0.55)
+      // 右葉: (nx: 0.5~0.65, ny: 0.25~0.45)
+      const lx = (nx - 0.42) / 0.12;
+      const ly = (ny - 0.44) / 0.15;
+      const isLeftLeaf = (lx * lx + ly * ly) <= 0.8 && (lx - ly) >= -0.2;
+
+      const rx = (nx - 0.58) / 0.12;
+      const ry = (ny - 0.34) / 0.15;
+      const isRightLeaf = (rx * rx + ry * ry) <= 0.8 && (rx + ry) <= 0.2;
+
+      if (isLeftLeaf || isRightLeaf) {
+        r = Math.floor(r * 0.2 + 235 * 0.8);
+        g = Math.floor(g * 0.2 + 250 * 0.8);
+        b = Math.floor(b * 0.2 + 235 * 0.8);
+      }
+
+      // 中央TODAYノード
+      const dNode = Math.sqrt((nx - 0.5) ** 2 + (ny - 0.5) ** 2) * width;
+      if (dNode <= width * 0.04) {
+        r = 255;
+        g = 255;
+        b = 255;
       }
 
       rawData[pixelOffset] = r;
@@ -129,6 +147,6 @@ if (!fs.existsSync('icons')) {
   fs.mkdirSync('icons');
 }
 
-fs.writeFileSync('icons/icon-192.png', createModernPNG(192, 192));
-fs.writeFileSync('icons/icon-512.png', createModernPNG(512, 512));
-console.log('Modern PNG icons generated successfully');
+fs.writeFileSync('icons/icon-192.png', createNaturalPNG(192, 192));
+fs.writeFileSync('icons/icon-512.png', createNaturalPNG(512, 512));
+console.log('Natural green PNG icons generated successfully');
