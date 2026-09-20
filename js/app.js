@@ -149,8 +149,13 @@ class App {
         return;
       }
 
-      // ペアの存在確認・登録
-      await ensurePairExists(this.supabase, pairId, secretKey, anniversaryDating, anniversaryMarriage);
+      // ペアの存在確認・登録 & 記念日自動同期
+      const remotePair = await ensurePairExists(this.supabase, pairId, secretKey, anniversaryDating, anniversaryMarriage);
+      if (remotePair && typeof remotePair === 'object' && remotePair.anniversary_dating) {
+        if (remotePair.anniversary_dating !== store.state.anniversaryDating) {
+          store.setAnniversaries(remotePair.anniversary_dating, remotePair.anniversary_marriage || '');
+        }
+      }
 
       // リモートタイムラインの差分取得
       const remoteEvents = await fetchRemoteTimeline(this.supabase, pairId);

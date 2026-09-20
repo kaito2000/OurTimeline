@@ -62,8 +62,15 @@ export class Store {
     const storedCustomUrl = localStorage.getItem(CONFIG.STORAGE_KEYS.CUSTOM_SUPABASE_URL);
     const storedCustomKey = localStorage.getItem(CONFIG.STORAGE_KEYS.CUSTOM_SUPABASE_KEY);
 
+    const urlSu = params.get('su');
+    const urlSk = params.get('sk');
+
     // URLパラメータの優先（ペアリング招待URLを開いた場合）
     if (urlPair) {
+      if (urlPair !== storedPair) {
+        // 新しいペアに参加する場合、古いローカルキャッシュをクリア
+        this.state.events = [];
+      }
       this.state.pairId = urlPair;
       localStorage.setItem(CONFIG.STORAGE_KEYS.PAIR_ID, urlPair);
     } else if (storedPair) {
@@ -87,12 +94,25 @@ export class Store {
       localStorage.setItem(CONFIG.STORAGE_KEYS.PAIR_SECRET_KEY, newKey);
     }
 
+    // Supabase接続情報の自動引き継ぎ（パートナー側は入力不要！）
+    if (urlSu) {
+      this.state.supabaseUrl = urlSu;
+      localStorage.setItem(CONFIG.STORAGE_KEYS.CUSTOM_SUPABASE_URL, urlSu);
+    } else {
+      this.state.supabaseUrl = storedCustomUrl || CONFIG.DEFAULT_SUPABASE_URL;
+    }
+
+    if (urlSk) {
+      this.state.supabaseAnonKey = urlSk;
+      localStorage.setItem(CONFIG.STORAGE_KEYS.CUSTOM_SUPABASE_KEY, urlSk);
+    } else {
+      this.state.supabaseAnonKey = storedCustomKey || CONFIG.DEFAULT_SUPABASE_ANON_KEY;
+    }
+
     this.state.anniversaryDating = storedDating || '2023-01-01';
     this.state.anniversaryMarriage = storedMarriage || '';
-    this.state.supabaseUrl = storedCustomUrl || CONFIG.DEFAULT_SUPABASE_URL;
-    this.state.supabaseAnonKey = storedCustomKey || CONFIG.DEFAULT_SUPABASE_ANON_KEY;
 
-    if (storedEventsJson) {
+    if (storedEventsJson && this.state.events.length === 0 && !urlPair) {
       try {
         this.state.events = JSON.parse(storedEventsJson);
       } catch (e) {

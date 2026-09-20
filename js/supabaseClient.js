@@ -77,22 +77,26 @@ export async function ensurePairExists(client, pairId, secretKey, datingDate, ma
       console.warn('Pair check warning:', error.message);
     }
 
-    if (!data) {
-      // ペアを新規登録
-      const { error: insertErr } = await client
-        .from('pairs')
-        .insert({
-          id: pairId,
-          secret_key_hash: keyHash,
-          anniversary_dating: datingDate || null,
-          anniversary_marriage: marriageDate || null
-        });
-
-      if (insertErr) {
-        console.warn('Pair insert notice:', insertErr.message);
-      }
+    if (data) {
+      return data;
     }
-    return true;
+
+    // ペアを新規登録
+    const { data: newPair, error: insertErr } = await client
+      .from('pairs')
+      .insert({
+        id: pairId,
+        secret_key_hash: keyHash,
+        anniversary_dating: datingDate || null,
+        anniversary_marriage: marriageDate || null
+      })
+      .select()
+      .maybeSingle();
+
+    if (insertErr) {
+      console.warn('Pair insert notice:', insertErr.message);
+    }
+    return newPair || true;
   } catch (err) {
     console.error('ensurePairExists error:', err);
     return false;

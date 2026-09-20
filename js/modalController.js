@@ -253,12 +253,17 @@ export class ModalController {
   }
 
   openShareModal() {
-    const pairId = this.store.state.pairId;
-    const secretKey = this.store.state.secretKey;
+    const { pairId, secretKey, supabaseUrl, supabaseAnonKey } = this.store.state;
 
-    // 招待URLを組み立て
+    // 招待URLを組み立て（Supabase接続情報も自動同封しパートナー側の設定入力を不要化）
     const baseUrl = window.location.origin + window.location.pathname;
-    const shareUrl = `${baseUrl}?pair=${encodeURIComponent(pairId)}&key=${encodeURIComponent(secretKey)}`;
+    const params = new URLSearchParams();
+    params.set('pair', pairId);
+    params.set('key', secretKey);
+    if (supabaseUrl) params.set('su', supabaseUrl);
+    if (supabaseAnonKey) params.set('sk', supabaseAnonKey);
+
+    const shareUrl = `${baseUrl}?${params.toString()}`;
 
     this.shareUrlInput.value = shareUrl;
     if (this.pairIdDisplay) {
