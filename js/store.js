@@ -123,15 +123,27 @@ export class Store {
       }
     }
 
-    // デモ・初期データ（空の場合のみ温かみのあるサンプルを用意）
+    this.state.syncStatus = (this.state.supabaseUrl && this.state.supabaseAnonKey) ? 'connecting' : 'unconfigured';
+
+    // Supabase未設定（ローカル専用モード）時のみ、イベントが空なら初期サンプルを用意
+    if (!this.state.supabaseUrl || !this.state.supabaseAnonKey) {
+      if (!this.state.events || this.state.events.length === 0) {
+        this.ensureInitialSampleEvents();
+      }
+    }
+
+    this.notify();
+  }
+
+  /**
+   * 初回用サンプルイベントの補完（未設定時またはオフラインでデータがない場合）
+   */
+  ensureInitialSampleEvents() {
     if (!this.state.events || this.state.events.length === 0) {
       this.state.events = this.getInitialSampleEvents();
       this.saveEventsCache();
+      this.notify();
     }
-
-    this.state.syncStatus = (this.state.supabaseUrl && this.state.supabaseAnonKey) ? 'connecting' : 'unconfigured';
-
-    this.notify();
   }
 
   /**

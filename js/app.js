@@ -25,6 +25,9 @@ class App {
     this.daysCounterEl = document.getElementById('days-counter');
     this.anniversaryLabelEl = document.getElementById('anniversary-label');
     this.syncStatusEl = document.getElementById('sync-status');
+    this.loadingScreenEl = document.getElementById('initial-loading-screen');
+    this.timelineWrapperEl = document.getElementById('timeline-wrapper');
+    this.isInitialLoaded = false;
   }
 
   async start() {
@@ -59,9 +62,7 @@ class App {
       }
     } else {
       // Safari等の標準ブラウザ内で開かれている場合:
-      // ★超重要★ iOS Safariでは「ホーム画面に追加」時に現在のアドレスバーURLがアイコンに焼き付けられる。
-      // ここでパラメータを消してしまうと、ホーム画面PWA起動時に空の設定で初期化されてしまうため、
-      // Safariブラウザ内ではアドレスバーに常にペアID・秘密鍵・Supabase情報を維持する！
+      // アドレスバーに常にペアID・秘密鍵・Supabase情報を維持
       const { pairId, secretKey, supabaseUrl, supabaseAnonKey } = store.state;
       if (pairId && secretKey) {
         const fullParams = new URLSearchParams();
@@ -98,11 +99,36 @@ class App {
       this.renderUi(state);
     });
 
-    // 初期描画（キャッシュ先行描画）
-    this.renderUi(store.state);
+    // ヘッダーやバッジの初期描画（タイムラインはローディング後に描画）
+    this.renderHeaderUi(store.state);
 
-    // 5. Supabase連携とRealtime同期
-    await this.initSupabaseSync();
+    // 5. Supabase同期 & 初期ローディング画面の制御
+    const hasSupabaseConfig = store.state.supabaseUrl && store.state.supabaseAnonKey;
+
+    if (hasSupabaseConfig) {
+      // Supabase同期完了（または失敗）までローディング画面を表示
+      const safetyTimeout = setTimeout(() => {
+        if (!this.isInitialLoaded) {
+          console.log('Supabase sync timeout, revealing initial cache/screen...');
+          store.ensureInitialSampleEvents();
+          this.hideInitialLoadingScreen();
+        }
+      }, 4000);
+
+      try {
+        await this.initSupabaseSync();
+      } finally {
+        clearTimeout(safetyTimeout);
+        if (store.state.events.length === 0) {
+          store.ensureInitialSampleEvents();
+        }
+        this.hideInitialLoadingScreen();
+      }
+    } else {
+      // Supabase未設定（ローカル専用モード）: 即座に初期画面を表示
+      store.ensureInitialSampleEvents();
+      this.hideInitialLoadingScreen();
+    }
 
     // 6. Service Worker登録 (PWA)
     this.registerServiceWorker();
@@ -201,7 +227,21 @@ class App {
     document.body.prepend(hint);
   }
 
-  renderUi(state) {
+  hideInitialLoadingScreen() {
+    if (this.isInitialLoaded) return;
+    this.isInitialLoaded = true;
+
+    if (this.loadingScreenEl) {
+      this.loadingScreenEl.classList.add('hidden');
+    }
+    if (this.timelineWrapperEl) {
+      this.timelineWrapperEl.classList.remove('hidden');
+    }
+    // 初期ローディング完了後の初回タイムライン描画
+    this.renderUi(store.state);
+  }
+
+  renderHeaderUi(state) {
     // 1. 記念日カウンター描画 (Day ○○ のみシンプル表示)
     if (this.daysCounterEl && state.anniversaryDating) {
       const days = calculateDaysCount(state.anniversaryDating);
@@ -243,9 +283,13 @@ class App {
         }
       }
     }
+  }
 
-    // 3. タイムライン描画
-    if (this.timelineContainer) {
+  renderUi(state) {
+    this.renderHeaderUi(state);
+
+    // 3. タイムライン描画（初期ローディング完了後のみ描画）
+    if (this.timelineContainer && this.isInitialLoaded) {
       renderTimeline(this.timelineContainer, state.events, {
         onToggleComplete: (eventId) => this.handleToggleComplete(eventId),
         onEdit: (event) => this.modalController.openEditEventModal(event),
@@ -317,6 +361,7 @@ class App {
       store.setSyncStatus('error', err.message || '同期エラーが発生しました');
     } finally {
       store.setSyncing(false);
+      this.hideInitialLoadingScreen();
     }
   }
 
