@@ -56,19 +56,14 @@
   <!-- グラスモーフィズム ヘッダー (iPhone Notch / Dynamic Island セーフエリア対応) -->
   <header class="sticky top-0 z-40 bg-white/85 backdrop-blur-xl border-b border-emerald-100/70 shadow-[0_4px_20px_-4px_rgba(45,106,79,0.04)] safe-top">
     <div class="max-w-2xl mx-auto px-4 py-2.5 flex items-center justify-between gap-2">
-      <!-- 左側: 経過日数カウンター (Day ○○) -->
-      <div class="flex items-center gap-2 min-w-0">
+      <!-- 左側: 経過日数カウンター (Day ○○ のみシンプル表示) -->
+      <div class="flex items-center gap-2 flex-shrink-0">
         <span class="inline-flex items-center justify-center w-7 h-7 rounded-xl bg-emerald-50 text-emerald-700 text-xs flex-shrink-0">
           🌿
         </span>
-        <div class="flex items-baseline gap-1.5 truncate">
-          <span id="days-counter" class="text-base font-black text-slate-800 font-display tracking-tight">
-            Day --
-          </span>
-          <span id="anniversary-label" class="text-[11px] text-slate-500 font-medium truncate">
-            ふたりの歩み
-          </span>
-        </div>
+        <span id="days-counter" class="text-base font-black text-slate-800 font-display tracking-tight">
+          Day --
+        </span>
       </div>
 
       <!-- 右側: 同期ステータス & アクションボタン群 -->

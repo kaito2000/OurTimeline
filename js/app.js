@@ -98,13 +98,10 @@ class App {
   }
 
   renderUi(state) {
-    // 1. 記念日カウンター描画
+    // 1. 記念日カウンター描画 (Day ○○ のみシンプル表示)
     if (this.daysCounterEl && state.anniversaryDating) {
       const days = calculateDaysCount(state.anniversaryDating);
       this.daysCounterEl.textContent = `Day ${days}`;
-      if (this.anniversaryLabelEl) {
-        this.anniversaryLabelEl.textContent = `(${days}日目)`;
-      }
     }
 
     // 2. 同期ステータスバッジ
