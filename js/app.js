@@ -442,6 +442,18 @@ class App {
   checkDailyHighlightNotifications(events) {
     if (!Array.isArray(events) || events.length === 0) return;
 
+    const todayStr = new Date().toISOString().split('T')[0];
+    const lastDailyCheckKey = 'ourtimeline_last_daily_notif_date';
+
+    if (typeof localStorage !== 'undefined') {
+      const lastCheck = localStorage.getItem(lastDailyCheckKey);
+      if (lastCheck === todayStr) {
+        // 本日すでにデイリーリマインド通知をチェック済みなら重複生成しない
+        return;
+      }
+      localStorage.setItem(lastDailyCheckKey, todayStr);
+    }
+
     // 1. 「○年前の今日」振り返り通知チェック
     const highlight = getOnThisDayHighlight(events);
     if (highlight && highlight.event) {
@@ -455,14 +467,13 @@ class App {
     }
 
     // 2. 直近3日以内の約束リマインド通知チェック
-    const todayStr = new Date().toISOString().split('T')[0];
     const upcomingEvents = events
       .filter(e => e.event_date >= todayStr && e.is_completed !== true && (e.category === 'future' || e.event_date > todayStr))
       .sort((a, b) => a.event_date.localeCompare(b.event_date));
 
     if (upcomingEvents.length > 0) {
       const next = upcomingEvents[0];
-      const days = calculateDaysCount(todayStr, next.event_date) - 1;
+      const days = calculateDaysUntil(next.event_date, todayStr);
       if (days >= 0 && days <= 3) {
         const dayLabel = days === 0 ? '今日' : `あと${days}日`;
         store.addNotification({

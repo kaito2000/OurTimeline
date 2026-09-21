@@ -468,7 +468,7 @@ export class Store {
 
     const todayStr = new Date().toISOString().split('T')[0];
 
-    // 重複チェック: 同じターゲットイベントに対する同日・同一種別の通知は先頭に更新
+    // 重複チェック: 同じターゲットイベントに対する同日・同一種別の通知
     const existingIndex = this.state.notifications.findIndex(n => {
       if (notifData.targetEventId && n.targetEventId === notifData.targetEventId) {
         if (n.type === notifData.type) {
@@ -477,6 +477,12 @@ export class Store {
       }
       return false;
     });
+
+    // デイリーリマインド系（振り返り通知・直近約束リマインド）の場合：
+    // すでに同日に通知が存在していれば、既読・未読状態を維持し、再作成・未読化しない
+    if (existingIndex >= 0 && (notifData.type === 'on_this_day' || notifData.type === 'upcoming_reminder')) {
+      return this.state.notifications[existingIndex];
+    }
 
     const newNotif = {
       id: notifData.id || generateUUID(),
