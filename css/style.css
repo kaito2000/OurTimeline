@@ -293,4 +293,83 @@ input[type="date"]::-webkit-date-and-time-value {
   opacity: 0.85;
 }
 
+/* プレミアム・マイルストーンカード（箔押しゴールド＆セージグリーン光彩） */
+.milestone-premium-card {
+  position: relative;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(254, 252, 232, 0.65) 50%, rgba(240, 253, 244, 0.75) 100%) !important;
+  border: 1.5px solid rgba(234, 179, 8, 0.6) !important;
+  box-shadow: 0 12px 28px -5px rgba(217, 119, 6, 0.14), 0 0 0 3px rgba(254, 240, 138, 0.3) !important;
+}
+
+.milestone-premium-card:hover {
+  border-color: rgba(202, 138, 4, 0.8) !important;
+  box-shadow: 0 16px 36px -6px rgba(217, 119, 6, 0.2), 0 0 0 4px rgba(254, 240, 138, 0.4) !important;
+}
+
+/* 「ふたりの言葉」引用ブロック (Quote) */
+.quote-block {
+  position: relative;
+  padding: 0.75rem 1rem 0.75rem 1.25rem;
+  background: rgba(240, 253, 244, 0.65);
+  border-left: 3px solid #10b981;
+  border-radius: 0 1rem 1rem 0;
+  margin-top: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.quote-mark {
+  font-family: Georgia, serif;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: #059669;
+  opacity: 0.5;
+}
+
+/* アイコン選択ピル */
+.icon-picker-btn {
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  touch-action: manipulation;
+}
+
+.icon-picker-btn.active {
+  background-color: #ecfdf5 !important;
+  border-color: #10b981 !important;
+  color: #065f46 !important;
+  box-shadow: 0 1px 4px rgba(16, 185, 129, 0.25);
+  transform: scale(1.06);
+}
+
+/* 時間帯別アンビエント自然光グラデーション */
+.ambient-glow-top, .ambient-glow-bottom {
+  transition: background 1.5s ease-in-out;
+}
+
+body.ambient-morning .ambient-glow-top {
+  background: radial-gradient(circle, rgba(167, 243, 208, 0.55) 0%, rgba(254, 240, 138, 0.18) 50%, transparent 70%);
+}
+body.ambient-morning .ambient-glow-bottom {
+  background: radial-gradient(circle, rgba(236, 253, 245, 0.5) 0%, rgba(254, 249, 195, 0.25) 50%, transparent 70%);
+}
+
+body.ambient-day .ambient-glow-top {
+  background: radial-gradient(circle, rgba(209, 250, 229, 0.5) 0%, rgba(240, 253, 244, 0) 70%);
+}
+body.ambient-day .ambient-glow-bottom {
+  background: radial-gradient(circle, rgba(236, 253, 245, 0.45) 0%, rgba(254, 249, 195, 0.2) 50%, transparent 70%);
+}
+
+body.ambient-sunset .ambient-glow-top {
+  background: radial-gradient(circle, rgba(254, 215, 170, 0.55) 0%, rgba(254, 240, 138, 0.2) 50%, transparent 70%);
+}
+body.ambient-sunset .ambient-glow-bottom {
+  background: radial-gradient(circle, rgba(253, 230, 138, 0.45) 0%, rgba(254, 215, 170, 0.25) 50%, transparent 70%);
+}
+
+body.ambient-night .ambient-glow-top {
+  background: radial-gradient(circle, rgba(153, 246, 228, 0.35) 0%, rgba(199, 210, 254, 0.18) 50%, transparent 70%);
+}
+body.ambient-night .ambient-glow-bottom {
+  background: radial-gradient(circle, rgba(204, 251, 241, 0.3) 0%, rgba(224, 231, 255, 0.18) 50%, transparent 70%);
+}
+
 

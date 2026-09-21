@@ -34,5 +34,22 @@ export const CONFIG = {
     anniversary: { label: '記念日', color: 'bg-amber-50 text-amber-800 border-amber-200/80', icon: '✨' },
     life: { label: '暮らし', color: 'bg-stone-100 text-stone-700 border-stone-200/80', icon: '🏡' },
     future: { label: '未来の約束', color: 'bg-teal-50 text-teal-800 border-teal-200/80', icon: '🌱' }
-  }
+  },
+
+  // 豊富なボタニカル・イベントアイコン（写真なしでも絵本のように華やか）
+  EVENT_ICONS: [
+    { icon: '🏡', label: '暮らし' },
+    { icon: '☕️', label: 'カフェ' },
+    { icon: '🌿', label: 'おでかけ' },
+    { icon: '✈️', label: '旅行' },
+    { icon: '🚗', label: 'ドライブ' },
+    { icon: '⛺️', label: 'キャンプ' },
+    { icon: '🎬', label: '映画' },
+    { icon: '🎁', label: 'プレゼント' },
+    { icon: '🍽️', label: 'ディナー' },
+    { icon: '🎂', label: '誕生日' },
+    { icon: '🌸', label: 'お花見' },
+    { icon: '🌱', label: '約束' },
+    { icon: '✨', label: '記念' }
+  ]
 };

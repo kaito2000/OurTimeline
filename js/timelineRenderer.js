@@ -172,9 +172,10 @@ function createEventCardElement(event, isFuture, options) {
 
   const categoryMeta = CONFIG.CATEGORIES[event.category] || CONFIG.CATEGORIES.life;
   const isCompleted = event.is_completed !== false;
+  const isHighlight = Boolean(event.is_highlight);
 
   const dotClass = isFuture && !isCompleted ? 'timeline-dot-ring timeline-dot-future' : 'timeline-dot-ring';
-  const cardClass = isFuture && !isCompleted ? 'modern-card future-event-card' : 'modern-card past-event-card';
+  const cardClass = (isFuture && !isCompleted ? 'modern-card future-event-card' : 'modern-card past-event-card') + (isHighlight ? ' milestone-premium-card' : '');
 
   const todayStr = new Date().toISOString().split('T')[0];
   const daysUntil = calculateDaysUntil(event.event_date, todayStr);
@@ -231,6 +232,8 @@ function createEventCardElement(event, isFuture, options) {
 
   reactionsHtml += `</div>`;
 
+  const displayIcon = event.custom_icon || categoryMeta.icon;
+
   cardWrapper.innerHTML = `
     <!-- タイムライン結合ドット -->
     <div class="${dotClass} top-5"></div>
@@ -244,9 +247,14 @@ function createEventCardElement(event, isFuture, options) {
             ${formatDate(event.event_date)}
           </span>
           <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold border backdrop-blur-sm ${categoryMeta.color}">
-            <span>${categoryMeta.icon}</span>
+            <span>${displayIcon}</span>
             <span>${categoryMeta.label}</span>
           </span>
+          ${isHighlight ? `
+            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-900 border border-amber-300/80 rounded-full text-[10px] font-black tracking-wide shadow-sm">
+              ✨ Special
+            </span>
+          ` : ''}
           ${countdownBadgeHtml}
           ${isFuture && isCompleted ? `
             <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full text-[10px] font-bold">
@@ -274,6 +282,19 @@ function createEventCardElement(event, isFuture, options) {
       <h3 class="text-base sm:text-lg font-black text-slate-800 mb-1.5 leading-snug tracking-tight">
         ${escapeHtml(event.title)}
       </h3>
+
+      <!-- ふたりの言葉 (Quote) -->
+      ${event.quote ? `
+        <div class="quote-block">
+          <div class="flex items-start gap-1.5">
+            <span class="quote-mark select-none">“</span>
+            <p class="text-xs sm:text-sm font-semibold text-emerald-900 italic leading-relaxed pt-0.5">
+              ${escapeHtml(event.quote)}
+            </p>
+            <span class="quote-mark select-none self-end">”</span>
+          </div>
+        </div>
+      ` : ''}
 
       <!-- メモ -->
       ${event.memo ? `

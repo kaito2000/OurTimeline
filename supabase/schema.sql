@@ -42,6 +42,9 @@ alter table timeline_events add column if not exists memo text;
 alter table timeline_events add column if not exists photo_url text;
 alter table timeline_events add column if not exists is_completed boolean default true;
 alter table timeline_events add column if not exists reactions jsonb default '{}'::jsonb;
+alter table timeline_events add column if not exists custom_icon text;
+alter table timeline_events add column if not exists is_highlight boolean default false;
+alter table timeline_events add column if not exists quote text;
 alter table timeline_events add column if not exists created_at timestamp with time zone default timezone('utc'::text, now());
 
 -- 4. インデックス

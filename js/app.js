@@ -22,6 +22,7 @@ import {
 } from './timelineRenderer.js';
 import { getOnThisDayHighlight } from './onThisDay.js';
 import { ModalController } from './modalController.js';
+import { calculateTreeGrowth } from './treeGrowth.js';
 
 class App {
   constructor() {
@@ -38,12 +39,35 @@ class App {
     this.upcomingCountdownContainer = document.getElementById('upcoming-countdown-container');
     this.btnNotifications = document.getElementById('btn-open-notifications');
     this.notificationBadge = document.getElementById('notification-badge');
+
+    // ふたりの木 成長演出
+    this.treeIconEl = document.getElementById('tree-icon');
+    this.btnTreeGrowth = document.getElementById('btn-tree-growth');
+    this.treeGrowthPopover = document.getElementById('tree-growth-popover');
+    this.popoverTreeIcon = document.getElementById('popover-tree-icon');
+    this.popoverTreeName = document.getElementById('popover-tree-name');
+    this.popoverTreeLevel = document.getElementById('popover-tree-level');
+    this.popoverTreeDesc = document.getElementById('popover-tree-desc');
+    this.popoverTreeScore = document.getElementById('popover-tree-score');
+    this.popoverTreeNext = document.getElementById('popover-tree-next');
+    this.popoverTreeBar = document.getElementById('popover-tree-bar');
+    this.btnCloseTreePopover = document.getElementById('btn-close-tree-popover');
+
     this.isInitialLoaded = false;
     this.isDismissedOnThisDay = false;
   }
 
   async start() {
     console.log('Starting OurTimeline App...');
+
+    // 0. 時間帯別アンビエント自然光テーマの適用
+    this.applyAmbientTimeTheme();
+    setInterval(() => this.applyAmbientTimeTheme(), 10 * 60 * 1000);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        this.applyAmbientTimeTheme();
+      }
+    });
 
     // 1. URLパラメータの取得 & 初期化
     const searchParams = window.location.search;
@@ -190,6 +214,36 @@ class App {
         this.modalController.openNotificationsModal();
       });
     }
+
+    // ふたりの木 ボタン & ポップオーバー
+    if (this.btnTreeGrowth && this.treeGrowthPopover) {
+      this.btnTreeGrowth.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isHidden = this.treeGrowthPopover.classList.contains('hidden');
+        if (isHidden) {
+          this.renderTreeGrowthDetails(store.state);
+          this.treeGrowthPopover.classList.remove('hidden');
+        } else {
+          this.treeGrowthPopover.classList.add('hidden');
+        }
+      });
+    }
+
+    if (this.btnCloseTreePopover && this.treeGrowthPopover) {
+      this.btnCloseTreePopover.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.treeGrowthPopover.classList.add('hidden');
+      });
+    }
+
+    // ポップオーバー外側クリックで閉じる
+    document.addEventListener('click', (e) => {
+      if (this.treeGrowthPopover && !this.treeGrowthPopover.classList.contains('hidden')) {
+        if (!this.treeGrowthPopover.contains(e.target) && !this.btnTreeGrowth?.contains(e.target)) {
+          this.treeGrowthPopover.classList.add('hidden');
+        }
+      }
+    });
   }
 
   showInAppBrowserBanner() {
@@ -269,16 +323,28 @@ class App {
   }
 
   renderHeaderUi(state) {
-    // 1. 記念日カウンター描画 (Day ○○ のみシンプル表示)
+    // 1. ふたりの木の成長アイコン更新
+    const treeGrowth = calculateTreeGrowth({
+      anniversaryDating: state.anniversaryDating,
+      events: state.events || []
+    });
+    if (this.treeIconEl) {
+      this.treeIconEl.textContent = treeGrowth.currentStage.icon;
+    }
+    if (this.treeGrowthPopover && !this.treeGrowthPopover.classList.contains('hidden')) {
+      this.renderTreeGrowthDetails(state);
+    }
+
+    // 2. 記念日カウンター描画 (Day ○○ のみシンプル表示)
     if (this.daysCounterEl && state.anniversaryDating) {
       const days = calculateDaysCount(state.anniversaryDating);
       this.daysCounterEl.textContent = `Day ${days}`;
     }
 
-    // 2. 未読通知バッジ（赤い丸マーク）の更新
+    // 3. 未読通知バッジ（赤い丸マーク）の更新
     this.updateNotificationBadge(state.unreadNotificationCount || 0);
 
-    // 3. 同期ステータスバッジ
+    // 4. 同期ステータスバッジ
     if (this.syncStatusEl) {
       if (!state.isOnline) {
         this.syncStatusEl.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> オフライン';
@@ -312,6 +378,55 @@ class App {
           };
         }
       }
+    }
+  }
+
+  /**
+   * 時間帯別アンビエント自然光テーマの反映
+   */
+  applyAmbientTimeTheme() {
+    const hour = new Date().getHours();
+    let themeClass = 'ambient-day';
+    if (hour >= 6 && hour < 11) {
+      themeClass = 'ambient-morning';
+    } else if (hour >= 11 && hour < 17) {
+      themeClass = 'ambient-day';
+    } else if (hour >= 17 && hour < 20) {
+      themeClass = 'ambient-sunset';
+    } else {
+      themeClass = 'ambient-night';
+    }
+
+    document.body.classList.remove('ambient-morning', 'ambient-day', 'ambient-sunset', 'ambient-night');
+    document.body.classList.add(themeClass);
+  }
+
+  /**
+   * ふたりの木の成長ポップオーバー描画
+   */
+  renderTreeGrowthDetails(state) {
+    const growth = calculateTreeGrowth({
+      anniversaryDating: state.anniversaryDating,
+      events: state.events || []
+    });
+
+    if (this.popoverTreeIcon) this.popoverTreeIcon.textContent = growth.currentStage.icon;
+    if (this.popoverTreeName) this.popoverTreeName.textContent = growth.currentStage.name;
+    if (this.popoverTreeLevel) this.popoverTreeLevel.textContent = `Level ${growth.currentStage.level}`;
+    if (this.popoverTreeDesc) this.popoverTreeDesc.textContent = growth.currentStage.description;
+    if (this.popoverTreeScore) this.popoverTreeScore.textContent = `${growth.score} pt`;
+
+    if (this.popoverTreeNext) {
+      if (growth.nextStage) {
+        const needed = growth.nextStage.minScore - growth.score;
+        this.popoverTreeNext.textContent = `次の成長まで あと${needed}pt`;
+      } else {
+        this.popoverTreeNext.textContent = '最高レベルに到達！🎉';
+      }
+    }
+
+    if (this.popoverTreeBar) {
+      this.popoverTreeBar.style.width = `${growth.progressPercent}%`;
     }
   }
 

@@ -65,3 +65,13 @@ test('calculateDaysUntil calculates remaining days correctly', async () => {
   // 空文字
   assert.equal(calculateDaysUntil(''), 0);
 });
+
+test('CONFIG.EVENT_ICONS has valid structure with icon and label', async () => {
+  const { CONFIG } = await import('../js/config.js');
+  assert.ok(Array.isArray(CONFIG.EVENT_ICONS));
+  assert.ok(CONFIG.EVENT_ICONS.length >= 10);
+  for (const item of CONFIG.EVENT_ICONS) {
+    assert.ok(item.icon && typeof item.icon === 'string');
+    assert.ok(item.label && typeof item.label === 'string');
+  }
+});

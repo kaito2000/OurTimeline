@@ -56,14 +56,44 @@
   <!-- グラスモーフィズム ヘッダー (iPhone Notch / Dynamic Island セーフエリア対応) -->
   <header class="sticky top-0 z-40 bg-white/85 backdrop-blur-xl border-b border-emerald-100/70 shadow-[0_4px_20px_-4px_rgba(45,106,79,0.04)] safe-top">
     <div class="max-w-2xl mx-auto px-4 py-2.5 flex items-center justify-between gap-2">
-      <!-- 左側: 経過日数カウンター (Day ○○ のみシンプル表示) -->
-      <div class="flex items-center gap-2 flex-shrink-0">
-        <span class="inline-flex items-center justify-center w-7 h-7 rounded-xl bg-emerald-50 text-emerald-700 text-xs flex-shrink-0">
-          🌿
-        </span>
-        <span id="days-counter" class="text-base font-black text-slate-800 font-display tracking-tight">
-          Day --
-        </span>
+      <!-- 左側: ふたりの木 ＆ 経過日数カウンター -->
+      <div class="relative flex-shrink-0">
+        <button id="btn-tree-growth" type="button" class="flex items-center gap-1.5 p-1 rounded-2xl hover:bg-emerald-50/80 transition-all active:scale-95 text-left group" title="ふたりの木の成長">
+          <span id="tree-icon" class="inline-flex items-center justify-center w-7 h-7 rounded-xl bg-emerald-50 text-emerald-700 text-sm flex-shrink-0 group-hover:scale-110 transition-transform">
+            🌱
+          </span>
+          <span id="days-counter" class="text-base font-black text-slate-800 font-display tracking-tight">
+            Day --
+          </span>
+        </button>
+
+        <!-- ふたりの木 成長ポップオーバー -->
+        <div id="tree-growth-popover" class="absolute top-full left-0 mt-2 z-50 w-72 p-4 rounded-3xl bg-white/95 backdrop-blur-2xl border border-emerald-100 shadow-2xl hidden modal-enter">
+          <div class="flex items-center justify-between pb-2.5 border-b border-slate-100">
+            <div class="flex items-center gap-2">
+              <span id="popover-tree-icon" class="text-2xl">🌱</span>
+              <div>
+                <h4 id="popover-tree-name" class="text-xs font-black text-slate-800">はじまりの双葉</h4>
+                <p id="popover-tree-level" class="text-[10px] font-bold text-emerald-600 font-display">Level 1</p>
+              </div>
+            </div>
+            <button type="button" id="btn-close-tree-popover" class="p-1 text-slate-400 hover:text-slate-600 rounded-full transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+          </div>
+          <p id="popover-tree-desc" class="text-[11px] text-slate-600 my-2.5 leading-relaxed"></p>
+          
+          <!-- 進捗バー -->
+          <div class="space-y-1 pt-1">
+            <div class="flex justify-between text-[10px] font-bold text-slate-500">
+              <span>成長スコア: <strong id="popover-tree-score" class="text-emerald-700">0 pt</strong></span>
+              <span id="popover-tree-next">次の成長まで</span>
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+              <div id="popover-tree-bar" class="bg-gradient-to-r from-emerald-500 to-teal-600 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- 右側: 同期ステータス & アクションボタン群 -->
@@ -187,10 +217,27 @@
           </div>
         </div>
 
+        <!-- アイコン選択 -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block text-xs font-bold text-slate-600">アイコンを選ぶ（任意）</label>
+            <span id="selected-icon-label" class="text-[11px] font-bold text-emerald-700">デフォルト</span>
+          </div>
+          <div id="icon-picker-container" class="flex flex-wrap gap-1.5 p-2 bg-slate-50 rounded-2xl border border-slate-200/60 max-h-24 overflow-y-auto">
+            <!-- JSで動的にボタン生成 -->
+          </div>
+        </div>
+
         <!-- タイトル -->
         <div>
           <label for="event-title" class="block text-xs font-bold text-slate-600 mb-1.5">タイトル *</label>
           <input type="text" id="event-title" required placeholder="例: 屋久島旅行、入籍、マイホーム計画" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 focus:bg-white transition-all" />
+        </div>
+
+        <!-- ふたりの大切な言葉 (Quote) -->
+        <div>
+          <label for="event-quote" class="block text-xs font-bold text-slate-600 mb-1.5">💬 ふたりの言葉・名言（任意）</label>
+          <input type="text" id="event-quote" maxlength="100" placeholder="例: 「これからもずっとよろしくね」「次は京都に行こう」" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 focus:bg-white transition-all" />
         </div>
 
         <!-- 一言メモ -->
@@ -200,6 +247,18 @@
             <span id="memo-counter" class="text-[10px] text-slate-400 font-mono">0 / 200</span>
           </div>
           <textarea id="event-memo" rows="3" maxlength="200" placeholder="楽しかったこと、ふたりで話したことなど (200文字以内)" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 focus:bg-white transition-all leading-relaxed"></textarea>
+        </div>
+
+        <!-- 特別な記念日カード（ハイライト）トグル -->
+        <div class="flex items-center justify-between p-3 bg-amber-50/60 border border-amber-200/70 rounded-2xl">
+          <div class="flex items-center gap-2">
+            <span class="text-base">✨</span>
+            <div>
+              <label for="event-is-highlight" class="text-xs font-bold text-slate-800 cursor-pointer">特別な日のハイライト</label>
+              <p class="text-[10px] text-slate-500">タイムラインでゴールドの箔押し風装飾で華麗に演出します</p>
+            </div>
+          </div>
+          <input type="checkbox" id="event-is-highlight" class="w-4 h-4 text-amber-600 rounded border-slate-300 focus:ring-amber-500 cursor-pointer" />
         </div>
 
         <!-- 写真添付 (自動WebP圧縮) -->
@@ -445,6 +504,6 @@
   </div>
 
   <!-- Main JavaScript -->
-  <script type="module" src="./js/app.js?v=1.9.5"></script>
+  <script type="module" src="./js/app.js?v=1.9.7"></script>
 </body>
 </html>
