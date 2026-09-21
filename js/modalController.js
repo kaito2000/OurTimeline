@@ -422,6 +422,10 @@ export class ModalController {
     this.inputMarriage.value = this.store.state.anniversaryMarriage || '';
     this.inputSupabaseUrl.value = this.store.state.supabaseUrl || '';
     this.inputSupabaseKey.value = this.store.state.supabaseAnonKey || '';
+    const versionEl = document.getElementById('app-version-display');
+    if (versionEl && CONFIG.VERSION) {
+      versionEl.textContent = `v${CONFIG.VERSION}`;
+    }
     this.openModal(this.settingsModal);
   }
 
