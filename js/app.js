@@ -23,6 +23,7 @@ import {
 import { getOnThisDayHighlight } from './onThisDay.js';
 import { ModalController } from './modalController.js';
 import { calculateTreeGrowth } from './treeGrowth.js';
+import { predictMilestones } from './milestonePredictor.js';
 
 class App {
   constructor() {
@@ -52,6 +53,14 @@ class App {
     this.popoverTreeNext = document.getElementById('popover-tree-next');
     this.popoverTreeBar = document.getElementById('popover-tree-bar');
     this.btnCloseTreePopover = document.getElementById('btn-close-tree-popover');
+
+    // 節目・記念日予報
+    this.popoverMilestoneSection = document.getElementById('popover-milestone-section');
+    this.popoverMilestoneCountdown = document.getElementById('popover-milestone-countdown');
+    this.popoverMilestoneTitle = document.getElementById('popover-milestone-title');
+    this.popoverMilestoneBadge = document.getElementById('popover-milestone-badge');
+    this.popoverMilestoneDate = document.getElementById('popover-milestone-date');
+    this.popoverUpcomingMilestones = document.getElementById('popover-upcoming-milestones');
 
     this.isInitialLoaded = false;
     this.isDismissedOnThisDay = false;
@@ -436,6 +445,48 @@ class App {
     if (this.popoverTreeBar) {
       this.popoverTreeBar.style.width = `${growth.progressPercent}%`;
     }
+
+    // 次の節目・記念日予報の計算と描画
+    if (this.popoverMilestoneSection) {
+      const milestones = predictMilestones({
+        anniversaryDating: state.anniversaryDating,
+        anniversaryMarriage: state.anniversaryMarriage
+      });
+
+      if (milestones && milestones.length > 0) {
+        this.popoverMilestoneSection.classList.remove('hidden');
+        const next = milestones[0];
+
+        if (this.popoverMilestoneCountdown) {
+          this.popoverMilestoneCountdown.textContent = next.daysUntil === 0 ? '今日！' : `あと ${next.daysUntil} 日`;
+        }
+        if (this.popoverMilestoneTitle) {
+          this.popoverMilestoneTitle.textContent = next.title;
+        }
+        if (this.popoverMilestoneBadge) {
+          this.popoverMilestoneBadge.textContent = next.type === 'dating' ? '交際記念' : (next.type === 'marriage' ? '結婚記念' : '節目');
+        }
+        if (this.popoverMilestoneDate) {
+          this.popoverMilestoneDate.textContent = `${next.date} (${next.formattedDate || ''})`;
+        }
+
+        if (this.popoverUpcomingMilestones) {
+          const upcomingList = milestones.slice(1, 4);
+          if (upcomingList.length > 0) {
+            this.popoverUpcomingMilestones.innerHTML = upcomingList.map(m => `
+              <div class="flex items-center justify-between py-1 border-t border-slate-100 text-[11px]">
+                <span class="text-slate-700 font-medium">${m.title}</span>
+                <span class="text-emerald-700 font-bold font-display">あと${m.daysUntil}日</span>
+              </div>
+            `).join('');
+          } else {
+            this.popoverUpcomingMilestones.innerHTML = '';
+          }
+        }
+      } else {
+        this.popoverMilestoneSection.classList.add('hidden');
+      }
+    }
   }
 
   updateNotificationBadge(count) {
@@ -474,9 +525,9 @@ class App {
       });
     }
 
-    // 2. 直近3日以内の約束リマインド通知チェック
+    // 2. 直近3日以内の予定リマインド通知チェック
     const upcomingEvents = events
-      .filter(e => e.event_date >= todayStr && e.is_completed !== true && (e.category === 'future' || e.event_date > todayStr))
+      .filter(e => e.event_date >= todayStr)
       .sort((a, b) => a.event_date.localeCompare(b.event_date));
 
     if (upcomingEvents.length > 0) {
@@ -486,10 +537,34 @@ class App {
         const dayLabel = days === 0 ? '今日' : `あと${days}日`;
         store.addNotification({
           type: 'upcoming_reminder',
-          title: `まもなく約束の日です (${dayLabel}) 🌱`,
+          title: `まもなく予定の日です (${dayLabel}) 🌱`,
           body: next.title,
           icon: '🌱',
           targetEventId: next.id
+        });
+      }
+    }
+
+    // 3. 次の節目・記念日の事前リマインド通知（7日前 または 当日）
+    const milestones = predictMilestones({
+      anniversaryDating: store.state.anniversaryDating,
+      anniversaryMarriage: store.state.anniversaryMarriage
+    });
+    if (milestones && milestones.length > 0) {
+      const nextM = milestones[0];
+      if (nextM.daysUntil === 0) {
+        store.addNotification({
+          type: 'milestone_today',
+          title: `🎉 今日は「${nextM.title}」です！`,
+          body: `ふたりの大切な記念日をお祝いしましょう🌿`,
+          icon: '🎉'
+        });
+      } else if (nextM.daysUntil === 7) {
+        store.addNotification({
+          type: 'milestone_upcoming',
+          title: `📅 もうすぐ「${nextM.title}」です`,
+          body: `あと7日（${nextM.date}）で節目を迎えます✨`,
+          icon: '📅'
         });
       }
     }

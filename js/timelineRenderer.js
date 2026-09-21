@@ -171,17 +171,16 @@ function createEventCardElement(event, isFuture, options) {
   cardWrapper.dataset.id = event.id;
 
   const categoryMeta = CONFIG.CATEGORIES[event.category] || CONFIG.CATEGORIES.life;
-  const isCompleted = event.is_completed !== false;
   const isHighlight = Boolean(event.is_highlight);
 
-  const dotClass = isFuture && !isCompleted ? 'timeline-dot-ring timeline-dot-future' : 'timeline-dot-ring';
-  const cardClass = (isFuture && !isCompleted ? 'modern-card future-event-card' : 'modern-card past-event-card') + (isHighlight ? ' milestone-premium-card' : '');
+  const dotClass = isFuture ? 'timeline-dot-ring timeline-dot-future' : 'timeline-dot-ring';
+  const cardClass = (isFuture ? 'modern-card future-event-card' : 'modern-card past-event-card') + (isHighlight ? ' milestone-premium-card' : '');
 
   const todayStr = new Date().toISOString().split('T')[0];
   const daysUntil = calculateDaysUntil(event.event_date, todayStr);
 
   let countdownBadgeHtml = '';
-  if (isFuture && !isCompleted) {
+  if (isFuture) {
     if (daysUntil === 0) {
       countdownBadgeHtml = `
         <span class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-teal-100 text-teal-900 border border-teal-300 rounded-full text-[10px] font-black tracking-wide shadow-sm">
@@ -254,11 +253,6 @@ function createEventCardElement(event, isFuture, options) {
             </span>
           ` : ''}
           ${countdownBadgeHtml}
-          ${isFuture && isCompleted ? `
-            <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full text-[10px] font-bold">
-              ✓ 約束達成
-            </span>
-          ` : ''}
         </div>
 
         <!-- 編集・削除アクション -->
@@ -318,22 +312,6 @@ function createEventCardElement(event, isFuture, options) {
         </div>
       ` : ''}
 
-      <!-- 未来イベント用の達成アクションボタン -->
-      ${isFuture ? `
-        <div class="mt-3 pt-3 border-t border-emerald-100 flex items-center justify-between gap-2">
-          <span class="text-[11px] text-emerald-800 font-medium">
-            ${isCompleted ? '🎉 約束が叶いました！' : '🌱 ふたりで叶えたい未来の予定'}
-          </span>
-          <button type="button" class="btn-toggle-complete inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm active:scale-95 ${
-            isCompleted 
-              ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' 
-              : 'bg-gradient-to-r from-emerald-600 to-teal-700 text-white hover:from-emerald-700 hover:to-teal-800 shadow-emerald-200'
-          }">
-            ${isCompleted ? '未達成に戻す' : '✨ 達成した！'}
-          </button>
-        </div>
-      ` : ''}
-
       <!-- ボタニカル・リアクションバー -->
       ${reactionsHtml}
     </div>
@@ -347,11 +325,6 @@ function createEventCardElement(event, isFuture, options) {
   const btnDelete = cardWrapper.querySelector('.btn-delete');
   if (btnDelete && options.onDelete) {
     btnDelete.addEventListener('click', () => options.onDelete(event));
-  }
-
-  const btnToggle = cardWrapper.querySelector('.btn-toggle-complete');
-  if (btnToggle && options.onToggleComplete) {
-    btnToggle.addEventListener('click', () => options.onToggleComplete(event.id));
   }
 
   const photoImg = cardWrapper.querySelector('.event-photo');
@@ -475,7 +448,7 @@ export function renderUpcomingCountdown(container, events, onPillClick) {
 
   const todayStr = new Date().toISOString().split('T')[0];
   const upcomingEvents = events
-    .filter(e => e.event_date >= todayStr && e.is_completed !== true && (e.category === 'future' || e.event_date > todayStr))
+    .filter(e => e.event_date >= todayStr)
     .sort((a, b) => a.event_date.localeCompare(b.event_date));
 
   if (upcomingEvents.length === 0) {
@@ -500,7 +473,7 @@ export function renderUpcomingCountdown(container, events, onPillClick) {
 
   pill.innerHTML = `
     <span class="w-2 h-2 rounded-full bg-teal-500 animate-pulse flex-shrink-0"></span>
-    <span class="text-slate-500 font-normal">次の約束:</span>
+    <span class="text-slate-500 font-normal">次の予定:</span>
     <span class="truncate max-w-[140px] sm:max-w-[200px] text-slate-800 font-extrabold">${escapeHtml(nextEvent.title)}</span>
     <span class="text-teal-800 flex-shrink-0">${countText}</span>
     <span class="text-slate-400 group-hover:text-teal-600 transition-colors">➔</span>

@@ -66,16 +66,15 @@ test('calculateDaysUntil calculates remaining days correctly', async () => {
   assert.equal(calculateDaysUntil(''), 0);
 });
 
-test('CONFIG.CATEGORIES has 6 curated categories with valid properties', async () => {
+test('CONFIG.CATEGORIES has 5 curated categories with valid properties', async () => {
   const { CONFIG } = await import('../js/config.js');
   const keys = Object.keys(CONFIG.CATEGORIES);
-  assert.equal(keys.length, 6);
+  assert.equal(keys.length, 5);
   assert.ok(keys.includes('life'));
   assert.ok(keys.includes('gourmet'));
   assert.ok(keys.includes('outing'));
   assert.ok(keys.includes('trip'));
   assert.ok(keys.includes('anniversary'));
-  assert.ok(keys.includes('future'));
 
   for (const key of keys) {
     const cat = CONFIG.CATEGORIES[key];

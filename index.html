@@ -93,6 +93,27 @@
               <div id="popover-tree-bar" class="bg-gradient-to-r from-emerald-500 to-teal-600 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
             </div>
           </div>
+
+          <!-- 次の節目・記念日予報 -->
+          <div id="popover-milestone-section" class="mt-3 pt-2.5 border-t border-slate-100">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                <span>📅</span> 次の節目・記念日予報
+              </span>
+              <span id="popover-milestone-countdown" class="text-[10px] font-black text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200"></span>
+            </div>
+            <div id="popover-milestone-card" class="p-2.5 rounded-2xl bg-slate-50 border border-emerald-100/70 space-y-1">
+              <div class="flex items-center justify-between">
+                <span id="popover-milestone-title" class="text-xs font-bold text-slate-800"></span>
+                <span id="popover-milestone-badge" class="text-[10px] font-black px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-900 border border-amber-200"></span>
+              </div>
+              <p id="popover-milestone-date" class="text-[11px] text-slate-500 font-medium"></p>
+            </div>
+            <!-- 今後の節目リスト -->
+            <div id="popover-upcoming-milestones" class="mt-2 space-y-1 text-[10px] text-slate-500">
+              <!-- JSで動的挿入 -->
+            </div>
+          </div>
         </div>
       </div>
 
@@ -214,7 +235,6 @@
               <option value="outing">🚗 おでかけ</option>
               <option value="trip">🌿 旅行</option>
               <option value="anniversary">✨ 記念日</option>
-              <option value="future">🌱 未来の約束</option>
             </select>
           </div>
         </div>
@@ -455,7 +475,7 @@
             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
             <span>OurTimeline</span>
             <span id="app-version-display" class="font-mono font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">
-              v2.0.0
+              v2.1.0
             </span>
           </div>
           <button type="button" id="btn-force-update-app" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200/90 font-bold text-[11px] hover:bg-emerald-100 active:scale-95 transition-all shadow-sm">
@@ -510,6 +530,6 @@
   </div>
 
   <!-- Main JavaScript -->
-  <script type="module" src="./js/app.js?v=2.0.0"></script>
+  <script type="module" src="./js/app.js?v=2.1.0"></script>
 </body>
 </html>

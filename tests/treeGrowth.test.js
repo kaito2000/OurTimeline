@@ -20,13 +20,13 @@ test('calculateTreeGrowth calculates stages and scores accurately', () => {
   assert.equal(growth1.currentStage.name, 'すくすく育つ若葉');
   assert.equal(growth1.currentStage.icon, '🌿');
 
-  // 3. 約束達成ボーナスとたくさんの思い出で大樹に成長
-  // イベント50件 (200pt) + 約束達成10件 (100pt) + 2年 (730日 / 30 * 3 = 72pt) = 372pt -> Level 4
+  // 3. 特別な記念日ハイライトボーナスとたくさんの思い出で大樹に成長
+  // イベント50件 (200pt) + ハイライト10件 (100pt) + 2年 (730日 / 30 * 3 = 72pt) = 372pt -> Level 4
   const growth2 = calculateTreeGrowth({
     anniversaryDating: '2024-09-21',
     events: [
-      ...Array(40).fill({ is_completed: true, category: 'trip' }),
-      ...Array(10).fill({ is_completed: true, category: 'future' })
+      ...Array(40).fill({ is_highlight: false, category: 'trip' }),
+      ...Array(10).fill({ is_highlight: true, category: 'anniversary' })
     ]
   });
   assert.ok(growth2.score >= 200);

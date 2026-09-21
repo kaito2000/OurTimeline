@@ -1,6 +1,6 @@
 // OurTimeline Configuration - Natural Green Edition
 export const CONFIG = {
-  VERSION: '2.0.0',
+  VERSION: '2.1.0',
   DEFAULT_SUPABASE_URL: '',
   DEFAULT_SUPABASE_ANON_KEY: '',
   
@@ -29,13 +29,12 @@ export const CONFIG = {
     { emoji: '🤍', label: 'ありがとう' }
   ],
 
-  // 自然なアースカラー＆ボタニカルカテゴリ（実用的な6種に厳選）
+  // 自然なアースカラー＆ボタニカルカテゴリ（実用的な5種に厳選）
   CATEGORIES: {
     life: { label: '暮らし', color: 'bg-stone-100 text-stone-700 border-stone-200/80', icon: '🏡' },
     gourmet: { label: 'カフェ・ごはん', color: 'bg-orange-50 text-orange-800 border-orange-200/80', icon: '☕️' },
     outing: { label: 'おでかけ', color: 'bg-emerald-50 text-emerald-800 border-emerald-200/80', icon: '🚗' },
     trip: { label: '旅行', color: 'bg-sky-50 text-sky-800 border-sky-200/80', icon: '🌿' },
-    anniversary: { label: '記念日', color: 'bg-amber-50 text-amber-800 border-amber-200/80', icon: '✨' },
-    future: { label: '未来の約束', color: 'bg-teal-50 text-teal-800 border-teal-200/80', icon: '🌱' }
+    anniversary: { label: '記念日', color: 'bg-amber-50 text-amber-800 border-amber-200/80', icon: '✨' }
   }
 };

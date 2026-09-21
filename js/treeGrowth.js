@@ -49,18 +49,18 @@ export const TREE_STAGES = [
  * @param {Object} params
  * @param {string} params.anniversaryDating - 交際記念日 (YYYY-MM-DD)
  * @param {Array} params.events - イベント配列
- * @returns {{ score: number, days: number, eventCount: number, completedPromiseCount: number, currentStage: Object, nextStage: Object|null, progressPercent: number }}
+ * @returns {{ score: number, days: number, eventCount: number, highlightCount: number, currentStage: Object, nextStage: Object|null, progressPercent: number }}
  */
 export function calculateTreeGrowth({ anniversaryDating, events = [] }) {
   const days = anniversaryDating ? Math.max(1, calculateDaysCount(anniversaryDating)) : 1;
   const eventCount = events.length;
-  const completedPromiseCount = events.filter(e => e.is_completed === true && (e.category === 'future' || e.event_date > new Date().toISOString().split('T')[0])).length;
+  const highlightCount = events.filter(e => Boolean(e.is_highlight)).length;
 
   // 成長スコア計算式:
   // - 経過日数: 30日ごとに 3pt
   // - 記録した思い出: 1件ごとに 4pt
-  // - 叶えた約束: 1件ごとに 10pt (特別なボーナス)
-  const score = Math.floor(days / 30) * 3 + (eventCount * 4) + (completedPromiseCount * 10);
+  // - 特別な記念日ハイライト: 1件ごとに 10pt (特別なボーナス)
+  const score = Math.floor(days / 30) * 3 + (eventCount * 4) + (highlightCount * 10);
 
   // 現在のステージを判定
   let currentStage = TREE_STAGES[0];
@@ -86,7 +86,7 @@ export function calculateTreeGrowth({ anniversaryDating, events = [] }) {
     score,
     days,
     eventCount,
-    completedPromiseCount,
+    highlightCount,
     currentStage,
     nextStage,
     progressPercent

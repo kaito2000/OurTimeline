@@ -1,5 +1,5 @@
 // OurTimeline Service Worker - Network-First for Instant Updates
-const CACHE_NAME = 'ourtimeline-v2.0.0';
+const CACHE_NAME = 'ourtimeline-v2.1.0';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -15,6 +15,7 @@ const ASSETS_TO_CACHE = [
   './js/modalController.js',
   './js/onThisDay.js',
   './js/treeGrowth.js',
+  './js/milestonePredictor.js',
   './icons/icon.svg',
   './icons/icon-192.png',
   './icons/icon-512.png'

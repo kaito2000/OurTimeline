@@ -316,8 +316,8 @@ export class ModalController {
     if (isCompleted === undefined) {
       const todayStr = new Date().toISOString().split('T')[0];
       const isFutureDate = date > todayStr;
-      // 未来の日付または未来の約束カテゴリは未達成(false)、過去の出来事は完了(true)
-      isCompleted = !(isFutureDate || category === 'future');
+      // 未来の日付は未達成(false)、過去の出来事は完了(true)
+      isCompleted = !isFutureDate;
     }
 
     this.btnSaveEvent.disabled = true;
