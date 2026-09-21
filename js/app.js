@@ -655,6 +655,8 @@ class App {
       }
     }
 
+    const existing = eventData.id ? store.state.events.find(e => e.id === eventData.id) : null;
+
     const payload = {
       id: eventData.id || generateUUID(),
       pair_id: pairId,
@@ -662,9 +664,11 @@ class App {
       title: eventData.title,
       category: eventData.category,
       memo: eventData.memo,
-      photo_url: photoUrl || (eventData.id ? (store.state.events.find(e => e.id === eventData.id)?.photo_url || '') : ''),
+      quote: eventData.quote || null,
+      is_highlight: Boolean(eventData.is_highlight),
+      photo_url: photoUrl || (existing?.photo_url || ''),
       is_completed: eventData.is_completed,
-      created_at: new Date().toISOString()
+      created_at: existing?.created_at || new Date().toISOString()
     };
 
     // 2. ローカルに即座に反映（楽観的UI更新）

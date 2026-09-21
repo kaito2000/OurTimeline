@@ -325,20 +325,6 @@ input[type="date"]::-webkit-date-and-time-value {
   opacity: 0.5;
 }
 
-/* アイコン選択ピル */
-.icon-picker-btn {
-  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-  touch-action: manipulation;
-}
-
-.icon-picker-btn.active {
-  background-color: #ecfdf5 !important;
-  border-color: #10b981 !important;
-  color: #065f46 !important;
-  box-shadow: 0 1px 4px rgba(16, 185, 129, 0.25);
-  transform: scale(1.06);
-}
-
 /* 時間帯別アンビエント自然光グラデーション */
 .ambient-glow-top, .ambient-glow-bottom {
   transition: background 1.5s ease-in-out;

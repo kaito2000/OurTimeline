@@ -232,8 +232,6 @@ function createEventCardElement(event, isFuture, options) {
 
   reactionsHtml += `</div>`;
 
-  const displayIcon = event.custom_icon || categoryMeta.icon;
-
   cardWrapper.innerHTML = `
     <!-- タイムライン結合ドット -->
     <div class="${dotClass} top-5"></div>
@@ -247,7 +245,7 @@ function createEventCardElement(event, isFuture, options) {
             ${formatDate(event.event_date)}
           </span>
           <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold border backdrop-blur-sm ${categoryMeta.color}">
-            <span>${displayIcon}</span>
+            <span>${categoryMeta.icon}</span>
             <span>${categoryMeta.label}</span>
           </span>
           ${isHighlight ? `

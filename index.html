@@ -210,21 +210,12 @@
             <label for="event-category" class="block text-xs font-bold text-slate-600 mb-1.5">カテゴリ</label>
             <select id="event-category" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 focus:bg-white transition-all">
               <option value="life">🏡 暮らし</option>
+              <option value="gourmet">☕️ カフェ・ごはん</option>
+              <option value="outing">🚗 おでかけ</option>
               <option value="trip">🌿 旅行</option>
               <option value="anniversary">✨ 記念日</option>
               <option value="future">🌱 未来の約束</option>
             </select>
-          </div>
-        </div>
-
-        <!-- アイコン選択 -->
-        <div>
-          <div class="flex items-center justify-between mb-1.5">
-            <label class="block text-xs font-bold text-slate-600">アイコンを選ぶ（任意）</label>
-            <span id="selected-icon-label" class="text-[11px] font-bold text-emerald-700">デフォルト</span>
-          </div>
-          <div id="icon-picker-container" class="flex flex-wrap gap-1.5 p-2 bg-slate-50 rounded-2xl border border-slate-200/60 max-h-24 overflow-y-auto">
-            <!-- JSで動的にボタン生成 -->
           </div>
         </div>
 
@@ -504,6 +495,6 @@
   </div>
 
   <!-- Main JavaScript -->
-  <script type="module" src="./js/app.js?v=1.9.7"></script>
+  <script type="module" src="./js/app.js?v=1.9.8"></script>
 </body>
 </html>

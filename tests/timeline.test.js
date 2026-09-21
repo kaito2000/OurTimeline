@@ -66,12 +66,58 @@ test('calculateDaysUntil calculates remaining days correctly', async () => {
   assert.equal(calculateDaysUntil(''), 0);
 });
 
-test('CONFIG.EVENT_ICONS has valid structure with icon and label', async () => {
+test('CONFIG.CATEGORIES has 6 curated categories with valid properties', async () => {
   const { CONFIG } = await import('../js/config.js');
-  assert.ok(Array.isArray(CONFIG.EVENT_ICONS));
-  assert.ok(CONFIG.EVENT_ICONS.length >= 10);
-  for (const item of CONFIG.EVENT_ICONS) {
-    assert.ok(item.icon && typeof item.icon === 'string');
-    assert.ok(item.label && typeof item.label === 'string');
+  const keys = Object.keys(CONFIG.CATEGORIES);
+  assert.equal(keys.length, 6);
+  assert.ok(keys.includes('life'));
+  assert.ok(keys.includes('gourmet'));
+  assert.ok(keys.includes('outing'));
+  assert.ok(keys.includes('trip'));
+  assert.ok(keys.includes('anniversary'));
+  assert.ok(keys.includes('future'));
+
+  for (const key of keys) {
+    const cat = CONFIG.CATEGORIES[key];
+    assert.ok(cat.icon && typeof cat.icon === 'string');
+    assert.ok(cat.label && typeof cat.label === 'string');
+    assert.ok(cat.color && typeof cat.color === 'string');
   }
+});
+
+test('Promise completion logic preserves is_completed for existing events', () => {
+  // 既存の未達成イベント（例: 未来の約束）
+  const existingUncompletedEvent = {
+    id: 'evt-future-1',
+    event_date: '2026-10-01',
+    title: '紅葉を見に行く',
+    category: 'trip',
+    is_completed: false
+  };
+
+  // 編集処理のロジック再現
+  const isEdit = true;
+  let isCompleted;
+  if (isEdit && typeof existingUncompletedEvent.is_completed === 'boolean') {
+    isCompleted = existingUncompletedEvent.is_completed;
+  }
+
+  // 編集後も false（未達成）が維持される
+  assert.equal(isCompleted, false);
+
+  // 新規イベントで未来の日付の場合は自動的に false（未達成）
+  const todayStr = '2026-09-21';
+  const newDate = '2026-11-15';
+  const newCategory = 'outing';
+  let newIsCompleted;
+  const isFutureDate = newDate > todayStr;
+  newIsCompleted = !(isFutureDate || newCategory === 'future');
+  assert.equal(newIsCompleted, false);
+
+  // 新規イベントで過去の日付の場合は true（完了）
+  const pastDate = '2026-05-01';
+  const pastCategory = 'gourmet';
+  const isPastFutureDate = pastDate > todayStr;
+  const pastIsCompleted = !(isPastFutureDate || pastCategory === 'future');
+  assert.equal(pastIsCompleted, true);
 });

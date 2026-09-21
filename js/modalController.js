@@ -33,13 +33,9 @@ export class ModalController {
     this.btnRemovePhoto = document.getElementById('btn-remove-photo');
     this.btnSaveEvent = document.getElementById('btn-save-event');
 
-    // アイコン選択ピル & 言葉(Quote) & 特別ハイライト
-    this.iconPickerContainer = document.getElementById('icon-picker-container');
-    this.selectedIconLabel = document.getElementById('selected-icon-label');
+    // 言葉(Quote) & 特別ハイライト
     this.inputQuote = document.getElementById('event-quote');
     this.inputIsHighlight = document.getElementById('event-is-highlight');
-    this.selectedCustomIcon = null;
-    this.initIconPicker();
 
     // 写真拡大モーダル
     this.lightboxModal = document.getElementById('lightbox-modal');
@@ -245,46 +241,6 @@ export class ModalController {
     });
   }
 
-  initIconPicker() {
-    if (!this.iconPickerContainer) return;
-    this.iconPickerContainer.innerHTML = '';
-    CONFIG.EVENT_ICONS.forEach(item => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'icon-picker-btn inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-semibold bg-white border border-slate-200/80 text-slate-700 hover:bg-slate-100/80';
-      btn.dataset.icon = item.icon;
-      btn.dataset.label = item.label;
-      btn.title = item.label;
-      btn.innerHTML = `<span>${item.icon}</span><span class="text-[11px]">${item.label}</span>`;
-      btn.addEventListener('click', () => {
-        if (this.selectedCustomIcon === item.icon) {
-          this.selectedCustomIcon = null;
-        } else {
-          this.selectedCustomIcon = item.icon;
-        }
-        this.updateIconPickerUI();
-      });
-      this.iconPickerContainer.appendChild(btn);
-    });
-  }
-
-  updateIconPickerUI() {
-    if (!this.iconPickerContainer) return;
-    const buttons = this.iconPickerContainer.querySelectorAll('.icon-picker-btn');
-    let activeLabel = 'デフォルト';
-    buttons.forEach(btn => {
-      if (this.selectedCustomIcon && btn.dataset.icon === this.selectedCustomIcon) {
-        btn.classList.add('active');
-        activeLabel = btn.dataset.label;
-      } else {
-        btn.classList.remove('active');
-      }
-    });
-    if (this.selectedIconLabel) {
-      this.selectedIconLabel.textContent = activeLabel;
-    }
-  }
-
   clearPhotoSelection() {
     this.selectedPhotoBlob = null;
     this.selectedPhotoDataUrl = null;
@@ -297,8 +253,6 @@ export class ModalController {
   openCreateEventModal() {
     this.currentEditEventId = null;
     this.clearPhotoSelection();
-    this.selectedCustomIcon = null;
-    this.updateIconPickerUI();
     this.eventModalTitle.textContent = 'ふたりの出来事を記録';
     this.inputDate.value = new Date().toISOString().split('T')[0];
     this.inputTitle.value = '';
@@ -313,8 +267,6 @@ export class ModalController {
   openEditEventModal(event) {
     this.currentEditEventId = event.id;
     this.clearPhotoSelection();
-    this.selectedCustomIcon = event.custom_icon || null;
-    this.updateIconPickerUI();
     this.eventModalTitle.textContent = '出来事を編集';
     this.inputDate.value = event.event_date;
     this.inputTitle.value = event.title;
@@ -352,6 +304,22 @@ export class ModalController {
       return;
     }
 
+    // 達成状態の決定:
+    // 編集時は既存イベントの達成状態を最優先で維持（勝手に達成済みにならないようにする）
+    let isCompleted;
+    if (this.currentEditEventId) {
+      const existing = this.store.state.events.find(e => e.id === this.currentEditEventId);
+      if (existing && typeof existing.is_completed === 'boolean') {
+        isCompleted = existing.is_completed;
+      }
+    }
+    if (isCompleted === undefined) {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const isFutureDate = date > todayStr;
+      // 未来の日付または未来の約束カテゴリは未達成(false)、過去の出来事は完了(true)
+      isCompleted = !(isFutureDate || category === 'future');
+    }
+
     this.btnSaveEvent.disabled = true;
     this.btnSaveEvent.textContent = '保存中...';
 
@@ -364,8 +332,7 @@ export class ModalController {
         memo,
         quote: quote || null,
         is_highlight: isHighlight,
-        custom_icon: this.selectedCustomIcon || null,
-        is_completed: category !== 'future'
+        is_completed: isCompleted
       };
 
       if (this.callbacks.onSaveEvent) {
