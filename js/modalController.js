@@ -59,6 +59,11 @@ export class ModalController {
     this.inputSupabaseUrl = document.getElementById('setting-supabase-url');
     this.inputSupabaseKey = document.getElementById('setting-supabase-key');
     this.formSettings = document.getElementById('settings-form');
+
+    // 通知センターモーダル
+    this.notificationModal = document.getElementById('notification-modal');
+    this.notificationsList = document.getElementById('notifications-list');
+    this.btnClearNotifications = document.getElementById('btn-clear-notifications');
   }
 
   bindEvents() {
@@ -202,8 +207,18 @@ export class ModalController {
       });
     }
 
+    // 通知すべて消去
+    if (this.btnClearNotifications) {
+      this.btnClearNotifications.addEventListener('click', () => {
+        if (confirm('通知をすべて消去しますか？')) {
+          this.store.clearAllNotifications();
+          this.renderNotifications();
+        }
+      });
+    }
+
     // モーダル外側クリックで閉じる
-    [this.eventModal, this.lightboxModal, this.shareModal, this.settingsModal].forEach(modal => {
+    [this.eventModal, this.lightboxModal, this.shareModal, this.settingsModal, this.notificationModal].forEach(modal => {
       if (!modal) return;
       modal.addEventListener('click', (e) => {
         if (e.target === modal) {
@@ -391,6 +406,76 @@ export class ModalController {
     }, 3000);
   }
 
+  openNotificationsModal() {
+    this.renderNotifications();
+    this.openModal(this.notificationModal);
+    this.store.markAllNotificationsAsRead();
+    if (this.callbacks.onNotificationsOpened) {
+      this.callbacks.onNotificationsOpened();
+    }
+  }
+
+  renderNotifications() {
+    if (!this.notificationsList) return;
+    this.notificationsList.innerHTML = '';
+
+    const notifications = this.store.state.notifications || [];
+
+    if (notifications.length === 0) {
+      this.notificationsList.innerHTML = `
+        <div class="text-center py-12 px-4 space-y-2">
+          <span class="text-3xl block">🌿</span>
+          <p class="text-xs font-bold text-slate-700">新しいお知らせはありません</p>
+          <p class="text-[11px] text-slate-400 max-w-xs mx-auto leading-relaxed">
+            パートナーからのリアクションや新しい思い出が届くと、ここに新着通知として届きます。
+          </p>
+        </div>
+      `;
+      return;
+    }
+
+    notifications.forEach(notif => {
+      const item = document.createElement('div');
+      const isUnread = !notif.isRead;
+      const borderClass = isUnread ? 'notification-unread border' : 'notification-read border';
+
+      item.className = `notification-item p-3.5 rounded-2xl ${borderClass} flex items-start gap-3 cursor-pointer hover:shadow-sm`;
+
+      item.innerHTML = `
+        <span class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-white text-base shadow-sm border border-emerald-100 flex-shrink-0">
+          ${escapeModalHtml(notif.icon || '🌿')}
+        </span>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between gap-2 mb-0.5">
+            <h4 class="text-xs font-bold text-slate-800 tracking-tight truncate">
+              ${escapeModalHtml(notif.title)}
+            </h4>
+            <span class="text-[10px] text-slate-400 whitespace-nowrap flex-shrink-0">
+              ${formatTimeAgo(notif.timestamp)}
+            </span>
+          </div>
+          ${notif.body ? `
+            <p class="text-[11px] text-slate-600 line-clamp-2 leading-relaxed">
+              ${escapeModalHtml(notif.body)}
+            </p>
+          ` : ''}
+        </div>
+        ${isUnread ? `
+          <span class="w-1.5 h-1.5 rounded-full bg-rose-500 self-center flex-shrink-0"></span>
+        ` : ''}
+      `;
+
+      item.addEventListener('click', () => {
+        this.closeModal(this.notificationModal);
+        if (notif.targetEventId && this.callbacks.onSelectEvent) {
+          this.callbacks.onSelectEvent(notif.targetEventId);
+        }
+      });
+
+      this.notificationsList.appendChild(item);
+    });
+  }
+
   openModal(modal) {
     if (!modal) return;
     modal.classList.remove('hidden');
@@ -404,4 +489,30 @@ export class ModalController {
     modal.classList.remove('flex');
     document.body.classList.remove('overflow-hidden');
   }
+}
+
+/**
+ * 経過時間のフォーマット（たった今、○分前、○時間前、昨日、○日前）
+ */
+function formatTimeAgo(isoString) {
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  const now = new Date();
+  const diffSec = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (diffSec < 60) return 'たった今';
+  if (diffSec < 3600) return `${Math.floor(diffSec / 60)}分前`;
+  if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}時間前`;
+  if (diffSec < 172800) return '昨日';
+  return `${Math.floor(diffSec / 86400)}日前`;
+}
+
+function escapeModalHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }

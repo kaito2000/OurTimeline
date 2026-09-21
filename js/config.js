@@ -16,7 +16,8 @@ export const CONFIG = {
     CUSTOM_SUPABASE_KEY: 'ourtimeline_custom_supabase_key',
     CACHED_EVENTS: 'ourtimeline_cached_events',
     LAST_SYNC_TIME: 'ourtimeline_last_sync',
-    USER_REACTIONS_PREFIX: 'ourtimeline_user_rx_'
+    USER_REACTIONS_PREFIX: 'ourtimeline_user_rx_',
+    NOTIFICATIONS: 'ourtimeline_notifications'
   },
 
   // ボタニカル・リアクション（ハートは使わず自然で温かい4種）

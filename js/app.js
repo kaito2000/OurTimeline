@@ -36,6 +36,8 @@ class App {
     this.highlightsContainer = document.getElementById('highlights-container');
     this.onThisDayContainer = document.getElementById('on-this-day-container');
     this.upcomingCountdownContainer = document.getElementById('upcoming-countdown-container');
+    this.btnNotifications = document.getElementById('btn-open-notifications');
+    this.notificationBadge = document.getElementById('notification-badge');
     this.isInitialLoaded = false;
     this.isDismissedOnThisDay = false;
   }
@@ -98,7 +100,9 @@ class App {
       onSaveEvent: (eventData, photoBlob, photoDataUrl) => this.handleSaveEvent(eventData, photoBlob, photoDataUrl),
       onDeleteEvent: (event) => this.handleDeleteEvent(event),
       onSaveSettings: (settings) => this.handleSaveSettings(settings),
-      onJoinPair: (credentials) => this.handleJoinPair(credentials)
+      onJoinPair: (credentials) => this.handleJoinPair(credentials),
+      onSelectEvent: (eventId) => this.scrollToEvent(eventId),
+      onNotificationsOpened: () => this.updateNotificationBadge(0)
     });
 
     // 3. UIイベントのバインド
@@ -179,6 +183,13 @@ class App {
         this.modalController.openSettingsModal();
       });
     }
+
+    // 通知ベルボタン
+    if (this.btnNotifications) {
+      this.btnNotifications.addEventListener('click', () => {
+        this.modalController.openNotificationsModal();
+      });
+    }
   }
 
   showInAppBrowserBanner() {
@@ -250,6 +261,9 @@ class App {
     if (this.highlightsContainer) {
       this.highlightsContainer.classList.remove('hidden');
     }
+    // 起動時の記念日・思い出リマインド通知チェック
+    this.checkDailyHighlightNotifications(store.state.events);
+
     // 初期ローディング完了後の初回タイムライン描画
     this.renderUi(store.state);
   }
@@ -261,7 +275,10 @@ class App {
       this.daysCounterEl.textContent = `Day ${days}`;
     }
 
-    // 2. 同期ステータスバッジ
+    // 2. 未読通知バッジ（赤い丸マーク）の更新
+    this.updateNotificationBadge(state.unreadNotificationCount || 0);
+
+    // 3. 同期ステータスバッジ
     if (this.syncStatusEl) {
       if (!state.isOnline) {
         this.syncStatusEl.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> オフライン';
@@ -294,6 +311,52 @@ class App {
             this.modalController.openSettingsModal();
           };
         }
+      }
+    }
+  }
+
+  updateNotificationBadge(count) {
+    if (!this.notificationBadge) return;
+    if (count > 0) {
+      this.notificationBadge.classList.remove('hidden');
+    } else {
+      this.notificationBadge.classList.add('hidden');
+    }
+  }
+
+  checkDailyHighlightNotifications(events) {
+    if (!Array.isArray(events) || events.length === 0) return;
+
+    // 1. 「○年前の今日」振り返り通知チェック
+    const highlight = getOnThisDayHighlight(events);
+    if (highlight && highlight.event) {
+      store.addNotification({
+        type: 'on_this_day',
+        title: `${highlight.message} 🌿`,
+        body: highlight.event.title,
+        icon: '🌿',
+        targetEventId: highlight.event.id
+      });
+    }
+
+    // 2. 直近3日以内の約束リマインド通知チェック
+    const todayStr = new Date().toISOString().split('T')[0];
+    const upcomingEvents = events
+      .filter(e => e.event_date >= todayStr && e.is_completed !== true && (e.category === 'future' || e.event_date > todayStr))
+      .sort((a, b) => a.event_date.localeCompare(b.event_date));
+
+    if (upcomingEvents.length > 0) {
+      const next = upcomingEvents[0];
+      const days = calculateDaysCount(todayStr, next.event_date) - 1;
+      if (days >= 0 && days <= 3) {
+        const dayLabel = days === 0 ? '今日' : `あと${days}日`;
+        store.addNotification({
+          type: 'upcoming_reminder',
+          title: `まもなく約束の日です (${dayLabel}) 🌱`,
+          body: next.title,
+          icon: '🌱',
+          targetEventId: next.id
+        });
       }
     }
   }
@@ -403,10 +466,47 @@ class App {
         onInsert: (newEvent) => {
           console.log('[Realtime] New event received:', newEvent);
           store.upsertEvent(newEvent);
+          store.addNotification({
+            type: 'event_created',
+            title: 'パートナーから新しい思い出 🌿',
+            body: newEvent.title,
+            icon: '🌿',
+            targetEventId: newEvent.id
+          });
         },
         onUpdate: (updatedEvent) => {
           console.log('[Realtime] Updated event received:', updatedEvent);
+          const prevEvent = store.state.events.find(e => e.id === updatedEvent.id);
           store.upsertEvent(updatedEvent);
+
+          // リアクションの増加を検知
+          const prevReactions = prevEvent?.reactions || {};
+          const nextReactions = updatedEvent.reactions || {};
+          let newEmoji = null;
+          for (const emoji of Object.keys(nextReactions)) {
+            if ((nextReactions[emoji] || 0) > (prevReactions[emoji] || 0)) {
+              newEmoji = emoji;
+              break;
+            }
+          }
+
+          if (newEmoji) {
+            store.addNotification({
+              type: 'reaction',
+              title: `パートナーから ${newEmoji} リアクション ✨`,
+              body: `「${updatedEvent.title}」にリアクションがつきました`,
+              icon: newEmoji,
+              targetEventId: updatedEvent.id
+            });
+          } else if (updatedEvent.is_completed && !prevEvent?.is_completed) {
+            store.addNotification({
+              type: 'promise_completed',
+              title: '約束が達成されました 🎉',
+              body: `「${updatedEvent.title}」を達成しました！`,
+              icon: '🌱',
+              targetEventId: updatedEvent.id
+            });
+          }
         },
         onDelete: (deletedEvent) => {
           console.log('[Realtime] Deleted event received:', deletedEvent);

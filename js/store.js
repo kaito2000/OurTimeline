@@ -12,6 +12,8 @@ export class Store {
       supabaseUrl: '',
       supabaseAnonKey: '',
       events: [],
+      notifications: [],
+      unreadNotificationCount: 0,
       isOnline: (typeof navigator !== 'undefined' && typeof navigator.onLine === 'boolean') ? navigator.onLine : true,
       isSyncing: false,
       syncStatus: 'unconfigured', // 'unconfigured' | 'connecting' | 'connected' | 'error'
@@ -131,6 +133,9 @@ export class Store {
         this.ensureInitialSampleEvents();
       }
     }
+
+    // 通知履歴の復元
+    this.loadNotifications();
 
     this.notify();
   }
@@ -419,6 +424,115 @@ export class Store {
     this.state.syncStatus = (this.state.supabaseUrl && this.state.supabaseAnonKey) ? 'connecting' : 'unconfigured';
     this.notify();
     return true;
+  }
+
+  /**
+   * 通知履歴の復元
+   */
+  loadNotifications() {
+    if (typeof localStorage === 'undefined') return;
+    try {
+      const raw = localStorage.getItem(CONFIG.STORAGE_KEYS.NOTIFICATIONS);
+      if (raw) {
+        const list = JSON.parse(raw);
+        if (Array.isArray(list)) {
+          this.state.notifications = list;
+          this.state.unreadNotificationCount = list.filter(n => !n.isRead).length;
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to load notifications cache:', err);
+    }
+  }
+
+  /**
+   * 通知履歴の永続化
+   */
+  saveNotifications() {
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem(CONFIG.STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(this.state.notifications));
+      } catch (err) {
+        console.warn('Failed to save notifications cache:', err);
+      }
+    }
+  }
+
+  /**
+   * 通知の追加
+   * @param {Object} notifData - { type, title, body, icon, targetEventId }
+   * @returns {Object} 作成された通知
+   */
+  addNotification(notifData) {
+    if (!notifData) return null;
+
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    // 重複チェック: 同じターゲットイベントに対する同日・同一種別の通知は先頭に更新
+    const existingIndex = this.state.notifications.findIndex(n => {
+      if (notifData.targetEventId && n.targetEventId === notifData.targetEventId) {
+        if (n.type === notifData.type) {
+          return n.timestamp && n.timestamp.startsWith(todayStr);
+        }
+      }
+      return false;
+    });
+
+    const newNotif = {
+      id: notifData.id || generateUUID(),
+      type: notifData.type || 'info',
+      title: notifData.title || '',
+      body: notifData.body || '',
+      icon: notifData.icon || '🌿',
+      targetEventId: notifData.targetEventId || '',
+      timestamp: notifData.timestamp || new Date().toISOString(),
+      isRead: false
+    };
+
+    if (existingIndex >= 0) {
+      this.state.notifications.splice(existingIndex, 1);
+    }
+
+    this.state.notifications.unshift(newNotif);
+
+    // 最大40件に制限
+    if (this.state.notifications.length > 40) {
+      this.state.notifications = this.state.notifications.slice(0, 40);
+    }
+
+    this.state.unreadNotificationCount = this.state.notifications.filter(n => !n.isRead).length;
+    this.saveNotifications();
+    this.notify();
+    return newNotif;
+  }
+
+  /**
+   * すべての通知を既読にする（未読赤丸バッジを消去）
+   */
+  markAllNotificationsAsRead() {
+    let changed = false;
+    this.state.notifications.forEach(n => {
+      if (!n.isRead) {
+        n.isRead = true;
+        changed = true;
+      }
+    });
+
+    this.state.unreadNotificationCount = 0;
+    if (changed) {
+      this.saveNotifications();
+      this.notify();
+    }
+  }
+
+  /**
+   * すべての通知を消去
+   */
+  clearAllNotifications() {
+    this.state.notifications = [];
+    this.state.unreadNotificationCount = 0;
+    this.saveNotifications();
+    this.notify();
   }
 }
 
