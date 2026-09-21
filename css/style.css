@@ -66,8 +66,8 @@ body {
 /* タイムラインの主軸（縦線）: 自然なセージ＆フォレストグラデーション */
 .timeline-stem {
   position: absolute;
-  top: 0;
-  bottom: 0;
+  top: 24px;
+  bottom: 80px;
   left: 22px;
   width: 2.5px;
   background: linear-gradient(180deg, #14b8a6 0%, #10b981 40%, #2d6a4f 75%, #bbf7d0 100%);

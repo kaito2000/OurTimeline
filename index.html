@@ -106,14 +106,17 @@
       </div>
     </div>
 
-    <!-- タイムラインエリア (初期はローディングのため非表示) -->
-    <div id="timeline-wrapper" class="relative min-h-[50vh] hidden">
+    <!-- 上部ハイライト領域 (直近カウントダウン & ○年前の今日) -->
+    <div id="highlights-container" class="hidden mb-2">
       <!-- 直近の約束カウントダウンバナー -->
-      <div id="upcoming-countdown-container" class="mb-4 flex justify-center hidden"></div>
+      <div id="upcoming-countdown-container" class="mb-3 flex justify-center hidden"></div>
 
       <!-- 「○年前の今日」思い出振り返りカード -->
       <div id="on-this-day-container" class="hidden"></div>
+    </div>
 
+    <!-- タイムラインエリア (初期はローディングのため非表示) -->
+    <div id="timeline-wrapper" class="relative min-h-[50vh] hidden">
       <!-- タイムライン縦軸ライン -->
       <div class="timeline-stem"></div>
       

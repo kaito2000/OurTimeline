@@ -33,6 +33,7 @@ class App {
     this.syncStatusEl = document.getElementById('sync-status');
     this.loadingScreenEl = document.getElementById('initial-loading-screen');
     this.timelineWrapperEl = document.getElementById('timeline-wrapper');
+    this.highlightsContainer = document.getElementById('highlights-container');
     this.onThisDayContainer = document.getElementById('on-this-day-container');
     this.upcomingCountdownContainer = document.getElementById('upcoming-countdown-container');
     this.isInitialLoaded = false;
@@ -245,6 +246,9 @@ class App {
     }
     if (this.timelineWrapperEl) {
       this.timelineWrapperEl.classList.remove('hidden');
+    }
+    if (this.highlightsContainer) {
+      this.highlightsContainer.classList.remove('hidden');
     }
     // 初期ローディング完了後の初回タイムライン描画
     this.renderUi(store.state);
