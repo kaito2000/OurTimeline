@@ -208,6 +208,14 @@ class App {
       });
     }
 
+    // 設定モーダル内の「最新版に更新」ボタン
+    const btnForceUpdate = document.getElementById('btn-force-update-app');
+    if (btnForceUpdate) {
+      btnForceUpdate.addEventListener('click', async () => {
+        await this.forceUpdateApp();
+      });
+    }
+
     // 通知ベルボタン
     if (this.btnNotifications) {
       this.btnNotifications.addEventListener('click', () => {
@@ -756,15 +764,111 @@ class App {
   }
 
   registerServiceWorker() {
-    if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').then((reg) => {
-          console.log('ServiceWorker registration successful with scope:', reg.scope);
-        }).catch((err) => {
-          console.log('ServiceWorker registration failed:', err);
+    if (!('serviceWorker' in navigator) || !window.location.protocol.startsWith('http')) return;
+
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!refreshing) {
+        refreshing = true;
+        window.location.reload();
+      }
+    });
+
+    window.addEventListener('load', async () => {
+      try {
+        const reg = await navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' });
+        console.log('[SW] Registered successfully, scope:', reg.scope);
+
+        // 1. 待機中の新しいWorkerが存在する場合
+        if (reg.waiting) {
+          this.showUpdatePrompt(reg.waiting);
+        }
+
+        // 2. 新しいWorkerがインストールされた場合
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          if (newWorker) {
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                this.showUpdatePrompt(newWorker);
+              }
+            });
+          }
         });
+
+        // 3. 起動時および画面復帰時に積極的に更新チェック
+        reg.update().catch(() => {});
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') {
+            reg.update().catch(() => {});
+          }
+        });
+      } catch (err) {
+        console.warn('[SW] Registration notice:', err);
+      }
+    });
+  }
+
+  showUpdatePrompt(worker) {
+    if (document.getElementById('app-update-banner')) return;
+
+    const banner = document.createElement('div');
+    banner.id = 'app-update-banner';
+    banner.className = 'fixed top-3 left-4 right-4 z-50 max-w-md mx-auto p-3.5 bg-gradient-to-r from-emerald-700 to-teal-800 text-white rounded-2xl shadow-2xl flex items-center justify-between gap-3 modal-enter border border-emerald-400/30';
+    banner.innerHTML = `
+      <div class="flex items-center gap-2.5">
+        <span class="text-xl">✨</span>
+        <div>
+          <p class="text-xs font-black leading-tight">最新バージョンが利用可能です</p>
+          <p class="text-[10px] text-emerald-100/90 font-medium">新機能・最新のデザインに即座に更新</p>
+        </div>
+      </div>
+      <button type="button" id="btn-apply-update" class="px-3.5 py-1.5 bg-white text-emerald-800 rounded-xl text-xs font-black shadow hover:bg-emerald-50 active:scale-95 transition-all flex-shrink-0">
+        今すぐ更新
+      </button>
+    `;
+
+    document.body.appendChild(banner);
+
+    const btn = banner.querySelector('#btn-apply-update');
+    if (btn) {
+      btn.addEventListener('click', () => {
+        btn.textContent = '更新中...';
+        btn.disabled = true;
+        worker.postMessage({ type: 'SKIP_WAITING' });
       });
     }
+  }
+
+  async forceUpdateApp() {
+    const btn = document.getElementById('btn-force-update-app');
+    if (btn) {
+      btn.innerHTML = '<span>⏳</span><span>更新中...</span>';
+      btn.disabled = true;
+    }
+
+    try {
+      // 1. Service Worker の登録解除
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for (const reg of regs) {
+          await reg.unregister();
+        }
+      }
+
+      // 2. Cache Storage の完全破棄
+      if ('caches' in window) {
+        const cacheKeys = await caches.keys();
+        await Promise.all(cacheKeys.map(key => caches.delete(key)));
+      }
+    } catch (err) {
+      console.warn('Cache clear warning:', err);
+    }
+
+    // 3. キャッシュをバイパスして最新ファイルを強制リロード
+    const url = new URL(window.location.href);
+    url.searchParams.set('_v', Date.now().toString());
+    window.location.replace(url.href);
   }
 
   setupAutoSyncPolling() {
