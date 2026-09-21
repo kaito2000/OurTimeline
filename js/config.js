@@ -1,6 +1,6 @@
 // OurTimeline Configuration - Natural Green Edition
 export const CONFIG = {
-  VERSION: '2.1.1',
+  VERSION: '2.1.2',
   DEFAULT_SUPABASE_URL: '',
   DEFAULT_SUPABASE_ANON_KEY: '',
   

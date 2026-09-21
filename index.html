@@ -55,18 +55,18 @@
 
   <!-- グラスモーフィズム ヘッダー (iPhone Notch / Dynamic Island セーフエリア対応) -->
   <header class="sticky top-0 z-40 bg-white/85 backdrop-blur-xl border-b border-emerald-100/70 shadow-[0_4px_20px_-4px_rgba(45,106,79,0.04)] safe-top">
-    <div class="max-w-2xl mx-auto px-4 py-2.5 flex items-center justify-between gap-2">
+    <div class="max-w-2xl mx-auto px-3 sm:px-4 py-2 flex items-center justify-between gap-1.5 sm:gap-2">
       <!-- 左側: ふたりの木 ＆ 経過日数カウンター -->
-      <div class="relative flex-shrink-0">
-        <button id="btn-tree-growth" type="button" class="flex items-center gap-2 p-1 rounded-2xl hover:bg-emerald-50/80 transition-all active:scale-95 text-left group" title="ふたりの木の成長 & 節目予報">
-          <span id="tree-icon" class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 text-base flex-shrink-0 group-hover:scale-110 transition-transform">
+      <div class="relative min-w-0">
+        <button id="btn-tree-growth" type="button" class="flex items-center gap-1.5 sm:gap-2 p-1 rounded-2xl hover:bg-emerald-50/80 transition-all active:scale-95 text-left group min-w-0" title="ふたりの木の成長 & 節目予報">
+          <span id="tree-icon" class="inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-emerald-50 text-emerald-700 text-sm sm:text-base flex-shrink-0 group-hover:scale-110 transition-transform">
             🌱
           </span>
-          <div class="flex flex-col">
-            <span id="days-counter" class="text-base font-black text-slate-800 font-display tracking-tight leading-none">
+          <div class="flex flex-col min-w-0">
+            <span id="days-counter" class="text-sm sm:text-base font-black text-slate-800 font-display tracking-tight leading-none truncate">
               Day --
             </span>
-            <span id="header-milestone-forecast" class="text-[10px] font-bold text-emerald-700/90 leading-tight mt-0.5 hidden">
+            <span id="header-milestone-forecast" class="text-[9px] sm:text-[10px] font-bold text-emerald-700/90 leading-tight mt-0.5 truncate hidden">
               <!-- 例: Day 500まで あと12日 -->
             </span>
           </div>
@@ -122,31 +122,26 @@
         </div>
       </div>
 
-      <!-- 右側: 同期ステータス & アクションボタン群 -->
-      <div class="flex items-center gap-2 flex-shrink-0">
-        <!-- 同期ステータスバッジ -->
-        <div id="sync-status" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200/60 shadow-sm">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> 準備中...
-        </div>
-
+      <!-- 右側: アクションボタン群（ヘッダーを広く空けるため同期ステータスは設定画面内へ移行） -->
+      <div class="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
         <!-- 通知ベルアイコンボタン -->
-        <button id="btn-open-notifications" type="button" class="relative p-1.5 rounded-full text-slate-500 hover:text-emerald-800 hover:bg-emerald-50 border border-transparent hover:border-emerald-200/60 transition-all active:scale-95" title="お知らせ・通知">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button id="btn-open-notifications" type="button" class="relative p-1.5 sm:p-2 rounded-full text-slate-500 hover:text-emerald-800 hover:bg-emerald-50 border border-transparent hover:border-emerald-200/60 transition-all active:scale-95" title="お知らせ・通知">
+          <svg class="w-4 h-4 sm:w-4.5 sm:h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
           </svg>
           <!-- 未読の小さな赤い丸マーク -->
-          <span id="notification-badge" class="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white hidden animate-pulse"></span>
+          <span id="notification-badge" class="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white hidden animate-pulse"></span>
         </button>
 
-        <button id="btn-share-pair" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-white/90 hover:bg-emerald-50 text-emerald-800 border border-emerald-200/80 shadow-sm backdrop-blur-sm transition-all active:scale-95" title="パートナーに共有">
+        <button id="btn-share-pair" type="button" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-bold bg-white/90 hover:bg-emerald-50 text-emerald-800 border border-emerald-200/80 shadow-sm backdrop-blur-sm transition-all active:scale-95" title="パートナーに共有">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
           </svg>
           <span class="hidden sm:inline">招待・共有</span>
         </button>
 
-        <button id="btn-open-settings" type="button" class="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-white/80 border border-transparent hover:border-slate-200/60 transition-all active:scale-95" title="設定">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button id="btn-open-settings" type="button" class="p-1.5 sm:p-2 rounded-full text-slate-500 hover:text-slate-800 hover:bg-white/80 border border-transparent hover:border-slate-200/60 transition-all active:scale-95" title="設定">
+          <svg class="w-4 h-4 sm:w-4.5 sm:h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
           </svg>
@@ -448,9 +443,12 @@
 
         <!-- Supabase設定 -->
         <div class="pt-3 border-t border-slate-100 space-y-3">
-          <div class="flex items-center justify-between">
+          <div class="flex items-center justify-between gap-2 flex-wrap">
             <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Supabase 接続設定</h3>
-            <span class="text-[10px] text-slate-400">リアルタイム同期用</span>
+            <!-- 同期ステータスバッジ（ヘッダーから設定画面内へ移行） -->
+            <div id="sync-status" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200/60 shadow-sm">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> 準備中...
+            </div>
           </div>
           <div>
             <label for="setting-supabase-url" class="block text-xs font-bold text-slate-600 mb-1.5">Project URL</label>
@@ -480,7 +478,7 @@
             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
             <span>OurTimeline</span>
             <span id="app-version-display" class="font-mono font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">
-              v2.1.1
+              v2.1.2
             </span>
           </div>
           <button type="button" id="btn-force-update-app" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200/90 font-bold text-[11px] hover:bg-emerald-100 active:scale-95 transition-all shadow-sm">
@@ -535,6 +533,6 @@
   </div>
 
   <!-- Main JavaScript -->
-  <script type="module" src="./js/app.js?v=2.1.1"></script>
+  <script type="module" src="./js/app.js?v=2.1.2"></script>
 </body>
 </html>
