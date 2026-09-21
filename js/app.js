@@ -6,6 +6,7 @@ import {
   getSupabaseClient,
   testSupabaseConnection,
   ensurePairExists,
+  updateRemotePairAnniversaries,
   fetchRemoteTimeline,
   insertTimelineEvent,
   updateRemoteEvent,
@@ -680,9 +681,22 @@ class App {
 
       // 2. ペアの存在確認・登録 & 記念日自動同期
       const remotePair = await ensurePairExists(this.supabase, pairId, secretKey, anniversaryDating, anniversaryMarriage);
-      if (remotePair && typeof remotePair === 'object' && remotePair.anniversary_dating) {
-        if (remotePair.anniversary_dating !== store.state.anniversaryDating) {
-          store.setAnniversaries(remotePair.anniversary_dating, remotePair.anniversary_marriage || '');
+      if (remotePair && typeof remotePair === 'object') {
+        const remoteDating = remotePair.anniversary_dating || '';
+        const remoteMarriage = remotePair.anniversary_marriage || '';
+        const localDating = store.state.anniversaryDating || '';
+        const localMarriage = store.state.anniversaryMarriage || '';
+
+        // リモートに記念日が存在し、ローカルと異なる場合はリモート優先でローカルを更新
+        if ((remoteDating && remoteDating !== localDating) || (remoteMarriage && remoteMarriage !== localMarriage)) {
+          store.setAnniversaries(remoteDating || localDating, remoteMarriage || localMarriage);
+        } else if ((localDating && !remoteDating) || (localMarriage && !remoteMarriage)) {
+          // 逆にローカルに値があり、リモート側が空の場合はリモートに補完反映
+          try {
+            await updateRemotePairAnniversaries(this.supabase, pairId, localDating, localMarriage);
+          } catch (syncErr) {
+            console.warn('Sync anniversaries to remote failed:', syncErr);
+          }
         }
       }
 
@@ -742,6 +756,22 @@ class App {
         onDelete: (deletedEvent) => {
           console.log('[Realtime] Deleted event received:', deletedEvent);
           store.removeEvent(deletedEvent.id);
+        },
+        onPairConfig: (config) => {
+          console.log('[Realtime] Pair config received:', config);
+          if (config) {
+            const nextDating = config.anniversaryDating ?? store.state.anniversaryDating;
+            const nextMarriage = config.anniversaryMarriage ?? store.state.anniversaryMarriage;
+            if (nextDating !== store.state.anniversaryDating || nextMarriage !== store.state.anniversaryMarriage) {
+              store.setAnniversaries(nextDating, nextMarriage);
+              store.addNotification({
+                type: 'anniversary_updated',
+                title: '記念日情報が更新されました 🌿',
+                body: 'パートナーが記念日設定を変更しました',
+                icon: '🌿'
+              });
+            }
+          }
         }
       });
 
@@ -847,7 +877,34 @@ class App {
         alert(`⚠️ Supabase接続警告:\n${testRes.message}`);
       }
     }
-    this.initSupabaseSync();
+
+    // 既にSupabase接続がある場合は先にリモート記念日を更新 & パートナー端末へ通知
+    if (this.supabase && store.state.pairId) {
+      try {
+        await updateRemotePairAnniversaries(this.supabase, store.state.pairId, dating, marriage);
+        broadcastTimelineChange('PAIR_CONFIG', {
+          anniversaryDating: dating,
+          anniversaryMarriage: marriage
+        });
+      } catch (err) {
+        console.error('リモート記念日更新エラー:', err);
+      }
+    }
+
+    await this.initSupabaseSync();
+
+    // 初めて接続した場合など、initSupabaseSync後にsupabaseが確立した場合は確実に反映
+    if (this.supabase && store.state.pairId) {
+      try {
+        await updateRemotePairAnniversaries(this.supabase, store.state.pairId, dating, marriage);
+        broadcastTimelineChange('PAIR_CONFIG', {
+          anniversaryDating: dating,
+          anniversaryMarriage: marriage
+        });
+      } catch (err) {
+        console.warn('初回接続時のリモート記念日同期:', err);
+      }
+    }
   }
 
   async handleJoinPair({ pairId, secretKey, supabaseUrl, supabaseAnonKey }) {

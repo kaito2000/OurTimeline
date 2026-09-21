@@ -1,6 +1,6 @@
 {
   "name": "ourtimeline",
-  "version": "1.0.0",
+  "version": "2.2.1",
   "description": "OurTimeline（ふたりのクロニクル）- 夫婦専用リアルタイム同期タイムラインPWA",
   "main": "js/app.js",
   "type": "module",

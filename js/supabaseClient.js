@@ -116,6 +116,27 @@ export async function ensurePairExists(client, pairId, secretKey, datingDate, ma
     }
 
     if (data) {
+      // 既存ペアが存在し、リモートの記念日が未設定でローカルに記念日がある場合は補完更新
+      const needsUpdate = (!data.anniversary_dating && datingDate) || (!data.anniversary_marriage && marriageDate);
+      if (needsUpdate) {
+        try {
+          const { data: updated, error: updateErr } = await client
+            .from('pairs')
+            .update({
+              anniversary_dating: data.anniversary_dating || datingDate || null,
+              anniversary_marriage: data.anniversary_marriage || marriageDate || null
+            })
+            .eq('id', pairId)
+            .select()
+            .maybeSingle();
+
+          if (!updateErr && updated) {
+            return updated;
+          }
+        } catch (updEx) {
+          console.warn('ensurePairExists complement update error:', updEx);
+        }
+      }
       return data;
     }
 
@@ -138,6 +159,40 @@ export async function ensurePairExists(client, pairId, secretKey, datingDate, ma
   } catch (err) {
     console.error('ensurePairExists error:', err);
     return false;
+  }
+}
+
+/**
+ * 夫婦ペアの記念日（交際記念日・入籍結婚記念日）をリモートDBへ更新・反映
+ * @param {Object} client SupabaseClient
+ * @param {string} pairId
+ * @param {string} datingDate YYYY-MM-DD
+ * @param {string} marriageDate YYYY-MM-DD
+ */
+export async function updateRemotePairAnniversaries(client, pairId, datingDate, marriageDate) {
+  if (!client || !pairId) return false;
+
+  try {
+    const { data, error } = await client
+      .from('pairs')
+      .update({
+        anniversary_dating: datingDate || null,
+        anniversary_marriage: marriageDate || null
+      })
+      .eq('id', pairId)
+      .select()
+      .maybeSingle();
+
+    if (error) {
+      console.error('updateRemotePairAnniversaries error:', error.message);
+      throw error;
+    }
+
+    console.log('[Supabase] Pair anniversaries updated successfully:', data);
+    return data;
+  } catch (err) {
+    console.error('updateRemotePairAnniversaries exception:', err);
+    throw err;
   }
 }
 
@@ -256,8 +311,9 @@ export async function uploadPhotoToStorage(client, pairId, photoBlob) {
  * @param {Function} onInsert
  * @param {Function} onUpdate
  * @param {Function} onDelete
+ * @param {Function} onPairConfig
  */
-export function subscribeToRealtime(client, pairId, { onInsert, onUpdate, onDelete }) {
+export function subscribeToRealtime(client, pairId, { onInsert, onUpdate, onDelete, onPairConfig } = {}) {
   if (!client || !pairId) return null;
 
   if (realtimeChannel) {
@@ -286,10 +342,12 @@ export function subscribeToRealtime(client, pairId, { onInsert, onUpdate, onDele
           onUpdate(payload.data);
         } else if (payload.action === 'DELETE' && onDelete) {
           onDelete(payload.data);
+        } else if (payload.action === 'PAIR_CONFIG' && onPairConfig) {
+          onPairConfig(payload.data);
         }
       }
     )
-    // 2. postgres_changes: DB更新時のフォールバック
+    // 2. postgres_changes: timeline_events DB更新時のフォールバック
     .on(
       'postgres_changes',
       {
@@ -329,6 +387,25 @@ export function subscribeToRealtime(client, pairId, { onInsert, onUpdate, onDele
         if (onDelete) onDelete(payload.old);
       }
     )
+    // 3. postgres_changes: pairs テーブルの記念日等更新の購読
+    .on(
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'pairs',
+        filter: `id=eq.${pairId}`
+      },
+      (payload) => {
+        console.log('[Supabase postgres_changes] PAIRS UPDATE:', payload);
+        if (onPairConfig && payload.new) {
+          onPairConfig({
+            anniversaryDating: payload.new.anniversary_dating,
+            anniversaryMarriage: payload.new.anniversary_marriage
+          });
+        }
+      }
+    )
     .subscribe((status) => {
       console.log(`[Supabase Realtime] Channel status: ${status}`);
     });
@@ -337,8 +414,8 @@ export function subscribeToRealtime(client, pairId, { onInsert, onUpdate, onDele
 }
 
 /**
- * ペアの相手端末へリアルタイムにイベント変更をブロードキャスト
- * @param {'INSERT' | 'UPDATE' | 'DELETE'} action
+ * ペアの相手端末へリアルタイムにイベント変更やペア設定をブロードキャスト
+ * @param {'INSERT' | 'UPDATE' | 'DELETE' | 'PAIR_CONFIG'} action
  * @param {Object} data
  */
 export function broadcastTimelineChange(action, data) {
