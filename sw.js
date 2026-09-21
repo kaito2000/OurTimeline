@@ -1,5 +1,5 @@
 // OurTimeline Service Worker - Network-First for Instant Updates
-const CACHE_NAME = 'ourtimeline-v2.1.3';
+const CACHE_NAME = 'ourtimeline-v2.2.0';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

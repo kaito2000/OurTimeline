@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "test": "node --test tests/*.test.js",
-    "lint": "node -e \"console.log('Lint passed')\""
+    "lint": "node -e \"console.log('Lint passed')\"",
+    "generate-icons": "node scripts/generate-icons.js"
   },
   "keywords": [
     "pwa",
@@ -16,5 +17,8 @@
     "realtime"
   ],
   "author": "Kaito & Antigravity",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2"
+  }
 }

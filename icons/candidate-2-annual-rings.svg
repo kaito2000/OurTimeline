@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="bg2" cx="35%" cy="30%" r="85%">
+      <stop offset="0%" stop-color="#2d6a4f"/>
+      <stop offset="65%" stop-color="#1b4332"/>
+      <stop offset="100%" stop-color="#0e271c"/>
+    </radialGradient>
+    <filter id="softGlow2" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#081c15" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- 背景 (ディープフォレストグリーン) -->
+  <rect width="512" height="512" rx="116" fill="url(#bg2)"/>
+
+  <!-- ふたつの核から始まりひとつに重なる年輪 -->
+  <g stroke="#ffffff" fill="none" stroke-linecap="round" filter="url(#softGlow2)">
+    <!-- ふたつの中心点（ふたりの出会い） -->
+    <circle cx="210" cy="275" r="4.5" fill="#ffffff" stroke="none"/>
+    <circle cx="302" cy="275" r="4.5" fill="#ffffff" stroke="none"/>
+
+    <!-- 各自の初期の歩み -->
+    <ellipse cx="210" cy="275" rx="26" ry="24" stroke-width="2" opacity="0.35"/>
+    <ellipse cx="302" cy="275" rx="26" ry="24" stroke-width="2" opacity="0.35"/>
+    <ellipse cx="210" cy="275" rx="55" ry="50" stroke-width="2.5" opacity="0.45"/>
+    <ellipse cx="302" cy="275" rx="55" ry="50" stroke-width="2.5" opacity="0.45"/>
+
+    <!-- 出会い、ひとつに重なり合う年輪（ふたりのクロニクル） -->
+    <path d="M 120,275 C 120,185 392,185 392,275 C 392,365 120,365 120,275 Z" stroke-width="3" opacity="0.75"/>
+    <path d="M 80,275 C 80,150 432,150 432,275 C 432,400 80,400 80,275 Z" stroke-width="3" opacity="0.9"/>
+    <path d="M 45,275 C 45,110 467,110 467,275 C 467,440 45,440 45,275 Z" stroke-width="2" opacity="0.4" stroke-dasharray="8 8"/>
+  </g>
+
+  <!-- 中心の新芽（今と未来） -->
+  <path d="M 256,235 C 242,218 242,192 256,172 C 270,192 270,218 256,235 Z" fill="#74c69d" opacity="0.95"/>
+</svg>

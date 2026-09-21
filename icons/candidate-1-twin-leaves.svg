@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f8faf8"/>
+      <stop offset="100%" stop-color="#e8f1ea"/>
+    </linearGradient>
+    <linearGradient id="leafGrad1" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2d6a4f"/>
+      <stop offset="100%" stop-color="#40916c"/>
+    </linearGradient>
+    <linearGradient id="leafGrad2" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#52b788"/>
+      <stop offset="100%" stop-color="#74c69d"/>
+    </linearGradient>
+    <filter id="shadow1" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#2d6a4f" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <!-- 背景 (エクリュ・生成り) -->
+  <rect width="512" height="512" rx="116" fill="url(#bg1)"/>
+  <rect width="508" height="508" x="2" y="2" rx="114" fill="none" stroke="#d5e5da" stroke-width="2"/>
+
+  <!-- 寄り添うふたつの若葉 -->
+  <g transform="translate(256, 265)" filter="url(#shadow1)">
+    <!-- 左の葉 (支える存在) -->
+    <path d="M 0,85 C -65,70 -135,-5 -95,-85 C -55,-125 -5,-65 0,-5 Z" 
+          fill="url(#leafGrad1)" opacity="0.95"/>
+
+    <!-- 右の葉 (未来へ向く存在) -->
+    <path d="M 0,85 C 65,75 135,15 105,-65 C 75,-115 5,-55 0,15 Z" 
+          fill="url(#leafGrad2)" opacity="0.9"/>
+
+    <!-- 接合点 -->
+    <circle cx="0" cy="85" r="5" fill="#2d6a4f"/>
+  </g>
+</svg>

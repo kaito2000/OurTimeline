@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="bg4" cx="35%" cy="30%" r="85%">
+      <stop offset="0%" stop-color="#2d6a4f"/>
+      <stop offset="70%" stop-color="#1b4332"/>
+      <stop offset="100%" stop-color="#0c2318"/>
+    </radialGradient>
+    <linearGradient id="ribbon1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d8f3dc"/>
+      <stop offset="100%" stop-color="#52b788"/>
+    </linearGradient>
+    <linearGradient id="ribbon2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#74c69d"/>
+    </linearGradient>
+    <filter id="softGlow4" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#0c2318" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="512" height="512" rx="116" fill="url(#bg4)"/>
+
+  <!-- ふたつの人生が交差してできる結び目 -->
+  <g fill="none" stroke-width="16" stroke-linecap="round" filter="url(#softGlow4)">
+    <!-- 曲線1 -->
+    <path d="M 150,335 C 150,195 362,315 362,175" stroke="url(#ribbon1)" opacity="0.85"/>
+    <!-- 曲線2 -->
+    <path d="M 362,335 C 362,195 150,315 150,175" stroke="url(#ribbon2)" opacity="0.95"/>
+  </g>
+
+  <!-- 重なり合う中心に浮かぶ光の葉 -->
+  <path d="M 256,215 C 235,240 235,270 256,295 C 277,270 277,240 256,215 Z" fill="#ffffff" opacity="0.9"/>
+
+  <!-- 起点と未来の光ノード -->
+  <circle cx="150" cy="335" r="7" fill="#d8f3dc"/>
+  <circle cx="362" cy="175" r="7" fill="#ffffff"/>
+</svg>
