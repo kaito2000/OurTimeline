@@ -14,7 +14,13 @@ import {
   subscribeToRealtime,
   broadcastTimelineChange
 } from './supabaseClient.js';
-import { renderTimeline, calculateDaysCount } from './timelineRenderer.js';
+import {
+  renderTimeline,
+  calculateDaysCount,
+  renderOnThisDayCard,
+  renderUpcomingCountdown
+} from './timelineRenderer.js';
+import { getOnThisDayHighlight } from './onThisDay.js';
 import { ModalController } from './modalController.js';
 
 class App {
@@ -27,7 +33,10 @@ class App {
     this.syncStatusEl = document.getElementById('sync-status');
     this.loadingScreenEl = document.getElementById('initial-loading-screen');
     this.timelineWrapperEl = document.getElementById('timeline-wrapper');
+    this.onThisDayContainer = document.getElementById('on-this-day-container');
+    this.upcomingCountdownContainer = document.getElementById('upcoming-countdown-container');
     this.isInitialLoaded = false;
+    this.isDismissedOnThisDay = false;
   }
 
   async start() {
@@ -288,14 +297,60 @@ class App {
   renderUi(state) {
     this.renderHeaderUi(state);
 
-    // 3. タイムライン描画（初期ローディング完了後のみ描画）
-    if (this.timelineContainer && this.isInitialLoaded) {
-      renderTimeline(this.timelineContainer, state.events, {
-        onToggleComplete: (eventId) => this.handleToggleComplete(eventId),
-        onEdit: (event) => this.modalController.openEditEventModal(event),
-        onDelete: (event) => this.handleDeleteEvent(event),
-        onPhotoClick: (url, caption) => this.modalController.openLightbox(url, caption)
-      });
+    if (this.isInitialLoaded) {
+      // 1. 直近の約束カウントダウンピルの描画
+      if (this.upcomingCountdownContainer) {
+        renderUpcomingCountdown(this.upcomingCountdownContainer, state.events, (eventId) => {
+          this.scrollToEvent(eventId);
+        });
+      }
+
+      // 2. 「○年前の今日」振り返りカードの描画
+      if (this.onThisDayContainer && !this.isDismissedOnThisDay) {
+        const highlight = getOnThisDayHighlight(state.events);
+        renderOnThisDayCard(this.onThisDayContainer, highlight, {
+          onCardClick: (eventId) => this.scrollToEvent(eventId),
+          onClose: () => {
+            this.isDismissedOnThisDay = true;
+          }
+        });
+      }
+
+      // 3. タイムライン描画
+      if (this.timelineContainer) {
+        renderTimeline(this.timelineContainer, state.events, {
+          getUserReactions: (eventId) => store.getUserReactions(eventId),
+          onReactionClick: (eventId, emoji) => this.handleReactionClick(eventId, emoji),
+          onToggleComplete: (eventId) => this.handleToggleComplete(eventId),
+          onEdit: (event) => this.modalController.openEditEventModal(event),
+          onDelete: (event) => this.handleDeleteEvent(event),
+          onPhotoClick: (url, caption) => this.modalController.openLightbox(url, caption)
+        });
+      }
+    }
+  }
+
+  scrollToEvent(eventId) {
+    if (!this.timelineContainer || !eventId) return;
+    const targetCard = this.timelineContainer.querySelector(`[data-id="${eventId}"]`);
+    if (targetCard) {
+      targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      targetCard.classList.add('ring-2', 'ring-emerald-400', 'ring-offset-2', 'rounded-3xl', 'transition-all');
+      setTimeout(() => {
+        targetCard.classList.remove('ring-2', 'ring-emerald-400', 'ring-offset-2');
+      }, 2000);
+    }
+  }
+
+  async handleReactionClick(eventId, emoji) {
+    const updated = store.toggleReaction(eventId, emoji);
+    if (updated && this.supabase) {
+      try {
+        await updateRemoteEvent(this.supabase, eventId, { reactions: updated.reactions });
+        broadcastTimelineChange('UPDATE', updated);
+      } catch (err) {
+        console.warn('Reaction remote sync warning:', err);
+      }
     }
   }
 

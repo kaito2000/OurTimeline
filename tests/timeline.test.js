@@ -46,3 +46,22 @@ test('sortEventsDescending sorts events correctly in descending order (future to
   // 降順: 2026-08-20 (2) -> 2025-06-01 (4) -> 2024-12-31 (3) -> 2023-05-10 (1)
   assert.deepEqual(ids, ['2', '4', '3', '1']);
 });
+
+test('calculateDaysUntil calculates remaining days correctly', async () => {
+  const { calculateDaysUntil } = await import('../js/timelineRenderer.js');
+
+  // 今日 -> 0
+  assert.equal(calculateDaysUntil('2026-09-21', '2026-09-21'), 0);
+
+  // 明日 -> 1
+  assert.equal(calculateDaysUntil('2026-09-22', '2026-09-21'), 1);
+
+  // 10日後 -> 10
+  assert.equal(calculateDaysUntil('2026-10-01', '2026-09-21'), 10);
+
+  // 昨日（過去） -> -1
+  assert.equal(calculateDaysUntil('2026-09-20', '2026-09-21'), -1);
+
+  // 空文字
+  assert.equal(calculateDaysUntil(''), 0);
+});

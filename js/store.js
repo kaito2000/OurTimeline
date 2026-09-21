@@ -295,6 +295,89 @@ export class Store {
   }
 
   /**
+   * イベントに対する絵文字リアクションのトグル（+1 または -1）
+   * @param {string} eventId
+   * @param {string} emoji
+   * @returns {Object|null} 更新されたイベント
+   */
+  toggleReaction(eventId, emoji) {
+    const event = this.state.events.find(e => e.id === eventId);
+    if (!event) return null;
+
+    if (!event.reactions || typeof event.reactions !== 'object') {
+      event.reactions = {};
+    }
+
+    const storageKey = `${CONFIG.STORAGE_KEYS.USER_REACTIONS_PREFIX}${eventId}`;
+    let myReactions = [];
+
+    if (this._memoryUserReactions && this._memoryUserReactions.has(storageKey)) {
+      myReactions = this._memoryUserReactions.get(storageKey);
+    } else if (typeof localStorage !== 'undefined' && localStorage && typeof localStorage.getItem === 'function') {
+      try {
+        myReactions = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      } catch {
+        myReactions = [];
+      }
+    }
+
+    const currentCount = Number(event.reactions[emoji]) || 0;
+    const hasReacted = myReactions.includes(emoji);
+
+    if (hasReacted) {
+      // 自分が既に押していたら解除
+      const nextCount = Math.max(0, currentCount - 1);
+      if (nextCount > 0) {
+        event.reactions[emoji] = nextCount;
+      } else {
+        delete event.reactions[emoji];
+      }
+      myReactions = myReactions.filter(e => e !== emoji);
+    } else {
+      // 新たにリアクション
+      event.reactions[emoji] = currentCount + 1;
+      myReactions.push(emoji);
+    }
+
+    if (!this._memoryUserReactions) {
+      this._memoryUserReactions = new Map();
+    }
+    this._memoryUserReactions.set(storageKey, myReactions);
+
+    if (typeof localStorage !== 'undefined' && localStorage && typeof localStorage.setItem === 'function') {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(myReactions));
+      } catch (err) {
+        console.warn('localStorage setItem error:', err);
+      }
+    }
+
+    this.saveEventsCache();
+    this.notify();
+    return event;
+  }
+
+  /**
+   * 自分がこのイベントに押したリアクションの配列を取得
+   * @param {string} eventId
+   * @returns {string[]}
+   */
+  getUserReactions(eventId) {
+    const storageKey = `${CONFIG.STORAGE_KEYS.USER_REACTIONS_PREFIX}${eventId}`;
+    if (this._memoryUserReactions && this._memoryUserReactions.has(storageKey)) {
+      return this._memoryUserReactions.get(storageKey);
+    }
+    if (typeof localStorage !== 'undefined' && localStorage && typeof localStorage.getItem === 'function') {
+      try {
+        return JSON.parse(localStorage.getItem(storageKey) || '[]');
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  }
+
+  /**
    * 別のペアに参加する（招待コード／URL入力時）
    * @param {Object} credentials
    */

@@ -30,6 +30,7 @@ create table if not exists timeline_events (
   memo text,
   photo_url text,
   is_completed boolean default true,
+  reactions jsonb default '{}'::jsonb,
   created_at timestamp with time zone default timezone('utc'::text, now())
 );
 
@@ -40,6 +41,7 @@ alter table timeline_events add column if not exists category text default 'life
 alter table timeline_events add column if not exists memo text;
 alter table timeline_events add column if not exists photo_url text;
 alter table timeline_events add column if not exists is_completed boolean default true;
+alter table timeline_events add column if not exists reactions jsonb default '{}'::jsonb;
 alter table timeline_events add column if not exists created_at timestamp with time zone default timezone('utc'::text, now());
 
 -- 4. インデックス

@@ -236,4 +236,41 @@ input[type="date"]::-webkit-date-and-time-value {
   min-height: 1.25em;
 }
 
+/* ボタニカル・リアクションピル */
+.reaction-pill {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.reaction-pill:active {
+  transform: scale(0.88);
+}
+
+@keyframes reaction-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+
+.reaction-pop-animate {
+  animation: reaction-pop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* 「○年前の今日」カードのアクセントライン */
+.on-this-day-card {
+  position: relative;
+}
+
+.on-this-day-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #10b981 0%, #14b8a6 50%, #059669 100%);
+  border-top-left-radius: 1.5rem;
+  border-top-right-radius: 1.5rem;
+}
+
 

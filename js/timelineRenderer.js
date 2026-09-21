@@ -20,6 +20,24 @@ export function calculateDaysCount(fromDateString, toDateString) {
 }
 
 /**
+ * 対象日までの残り日数を計算 (今日なら0、明日なら1、過去なら負数)
+ * @param {string} targetDateString - YYYY-MM-DD
+ * @param {string} [fromDateString] - YYYY-MM-DD (省略時は今日)
+ * @returns {number}
+ */
+export function calculateDaysUntil(targetDateString, fromDateString) {
+  if (!targetDateString) return 0;
+  const target = new Date(targetDateString + 'T00:00:00');
+  const from = fromDateString ? new Date(fromDateString + 'T00:00:00') : new Date();
+
+  target.setHours(0, 0, 0, 0);
+  from.setHours(0, 0, 0, 0);
+
+  const diffTime = target.getTime() - from.getTime();
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+}
+
+/**
  * 日付文字列のフォーマット (例: 2025年5月12日 (月))
  */
 export function formatDate(dateString) {
@@ -158,6 +176,61 @@ function createEventCardElement(event, isFuture, options) {
   const dotClass = isFuture && !isCompleted ? 'timeline-dot-ring timeline-dot-future' : 'timeline-dot-ring';
   const cardClass = isFuture && !isCompleted ? 'modern-card future-event-card' : 'modern-card past-event-card';
 
+  const todayStr = new Date().toISOString().split('T')[0];
+  const daysUntil = calculateDaysUntil(event.event_date, todayStr);
+
+  let countdownBadgeHtml = '';
+  if (isFuture && !isCompleted) {
+    if (daysUntil === 0) {
+      countdownBadgeHtml = `
+        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-teal-100 text-teal-900 border border-teal-300 rounded-full text-[10px] font-black tracking-wide shadow-sm">
+          🌱 本日！
+        </span>
+      `;
+    } else if (daysUntil > 0) {
+      countdownBadgeHtml = `
+        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-teal-50 text-teal-800 border border-teal-200/90 rounded-full text-[10px] font-black tracking-wide shadow-sm">
+          🌱 あと <span class="text-xs font-black text-teal-700 font-display">${daysUntil}</span> 日
+        </span>
+      `;
+    }
+  }
+
+  // リアクションバーの生成
+  const reactions = event.reactions || {};
+  const userReactions = options.getUserReactions ? options.getUserReactions(event.id) : [];
+
+  let reactionsHtml = `
+    <div class="reactions-bar flex items-center gap-1.5 flex-wrap mt-3 pt-2.5 border-t border-slate-100/80">
+  `;
+
+  CONFIG.REACTIONS.forEach(r => {
+    const count = Number(reactions[r.emoji]) || 0;
+    const isReacted = userReactions.includes(r.emoji);
+    const hasCount = count > 0;
+
+    const baseClass = "reaction-pill inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-all duration-150 active:scale-90 select-none cursor-pointer";
+    const styleClass = isReacted
+      ? "bg-emerald-100 text-emerald-900 border border-emerald-300/90 shadow-sm"
+      : hasCount
+        ? "bg-slate-100 hover:bg-slate-200/80 text-slate-700 border border-slate-200/80"
+        : "bg-transparent hover:bg-slate-100/70 text-slate-400 opacity-60 hover:opacity-100 border border-transparent";
+
+    reactionsHtml += `
+      <button
+        type="button"
+        class="${baseClass} ${styleClass}"
+        data-emoji="${r.emoji}"
+        title="${r.label}"
+      >
+        <span class="text-sm leading-none">${r.emoji}</span>
+        ${hasCount ? `<span class="text-[11px] font-bold leading-none">${count}</span>` : ''}
+      </button>
+    `;
+  });
+
+  reactionsHtml += `</div>`;
+
   cardWrapper.innerHTML = `
     <!-- タイムライン結合ドット -->
     <div class="${dotClass} top-5"></div>
@@ -174,12 +247,7 @@ function createEventCardElement(event, isFuture, options) {
             <span>${categoryMeta.icon}</span>
             <span>${categoryMeta.label}</span>
           </span>
-          ${isFuture && !isCompleted ? `
-            <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-teal-50 text-teal-800 border border-teal-200/80 rounded-full text-[10px] font-black tracking-wide">
-              <span class="w-1.5 h-1.5 rounded-full bg-teal-600 animate-pulse"></span>
-              未来の約束
-            </span>
-          ` : ''}
+          ${countdownBadgeHtml}
           ${isFuture && isCompleted ? `
             <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full text-[10px] font-bold">
               ✓ 約束達成
@@ -246,6 +314,9 @@ function createEventCardElement(event, isFuture, options) {
           </button>
         </div>
       ` : ''}
+
+      <!-- ボタニカル・リアクションバー -->
+      ${reactionsHtml}
     </div>
   `;
 
@@ -269,7 +340,158 @@ function createEventCardElement(event, isFuture, options) {
     photoImg.addEventListener('click', () => options.onPhotoClick(event.photo_url, event.title));
   }
 
+  const reactionButtons = cardWrapper.querySelectorAll('.reaction-pill');
+  reactionButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const emoji = btn.dataset.emoji;
+      if (options.onReactionClick && emoji) {
+        options.onReactionClick(event.id, emoji);
+      }
+    });
+  });
+
   return cardWrapper;
+}
+
+/**
+ * 「○年前の今日」ハイライトカードのレンダリング
+ * @param {HTMLElement} container
+ * @param {Object|null} highlight
+ * @param {Object} [options={}] - { onCardClick, onClose }
+ */
+export function renderOnThisDayCard(container, highlight, options = {}) {
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (!highlight || !highlight.event) {
+    container.classList.add('hidden');
+    return;
+  }
+
+  container.classList.remove('hidden');
+
+  const event = highlight.event;
+  const card = document.createElement('div');
+  card.className = 'on-this-day-card relative p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-emerald-50/95 via-teal-50/90 to-emerald-50/95 border border-emerald-200/90 shadow-sm backdrop-blur-md mb-6 overflow-hidden transition-all hover:shadow-md cursor-pointer group';
+
+  card.innerHTML = `
+    <div class="flex items-start justify-between gap-3">
+      <div class="flex items-center gap-2.5">
+        <span class="inline-flex items-center justify-center w-8 h-8 rounded-2xl bg-white/90 text-emerald-700 shadow-sm border border-emerald-100 text-sm flex-shrink-0">
+          🌿
+        </span>
+        <div>
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <span class="text-xs font-black text-emerald-800 tracking-tight font-display">
+              ${escapeHtml(highlight.message)}
+            </span>
+            <span class="text-[10px] text-emerald-600/90 font-medium">
+              ${escapeHtml(highlight.formattedDate)}
+            </span>
+          </div>
+          <h4 class="text-sm sm:text-base font-black text-slate-800 tracking-tight mt-0.5 group-hover:text-emerald-900 transition-colors">
+            ${escapeHtml(event.title)}
+          </h4>
+        </div>
+      </div>
+      <button type="button" class="btn-close-onthisday p-1.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-white/60 transition-colors" title="閉じる">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+
+    ${event.memo ? `
+      <p class="text-xs text-slate-600 mt-2 line-clamp-2 leading-relaxed pl-10">
+        ${escapeHtml(event.memo)}
+      </p>
+    ` : ''}
+
+    ${event.photo_url ? `
+      <div class="mt-2.5 pl-10 flex items-center gap-2">
+        <div class="w-12 h-12 rounded-xl overflow-hidden border border-emerald-100/90 shadow-sm flex-shrink-0">
+          <img src="${event.photo_url}" alt="${escapeHtml(event.title)}" class="w-full h-full object-cover" />
+        </div>
+        <span class="text-[11px] font-bold text-emerald-700 inline-flex items-center gap-1 group-hover:underline">
+          タイムラインで思い出を見る ➔
+        </span>
+      </div>
+    ` : `
+      <div class="mt-1.5 pl-10">
+        <span class="text-[11px] font-bold text-emerald-700 inline-flex items-center gap-1 group-hover:underline">
+          タイムラインで思い出を見る ➔
+        </span>
+      </div>
+    `}
+  `;
+
+  const btnClose = card.querySelector('.btn-close-onthisday');
+  if (btnClose) {
+    btnClose.addEventListener('click', (e) => {
+      e.stopPropagation();
+      container.classList.add('hidden');
+      if (options.onClose) options.onClose();
+    });
+  }
+
+  card.addEventListener('click', () => {
+    if (options.onCardClick) {
+      options.onCardClick(event.id);
+    }
+  });
+
+  container.appendChild(card);
+}
+
+/**
+ * 直近の未来の約束のカウントダウンピルのレンダリング
+ * @param {HTMLElement} container
+ * @param {Array} events
+ * @param {Function} [onPillClick]
+ */
+export function renderUpcomingCountdown(container, events, onPillClick) {
+  if (!container) return;
+  container.innerHTML = '';
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  const upcomingEvents = events
+    .filter(e => e.event_date >= todayStr && e.is_completed !== true && (e.category === 'future' || e.event_date > todayStr))
+    .sort((a, b) => a.event_date.localeCompare(b.event_date));
+
+  if (upcomingEvents.length === 0) {
+    container.classList.add('hidden');
+    return;
+  }
+
+  const nextEvent = upcomingEvents[0];
+  const daysUntil = calculateDaysUntil(nextEvent.event_date, todayStr);
+
+  container.classList.remove('hidden');
+
+  const pill = document.createElement('div');
+  pill.className = 'inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-teal-200/90 shadow-sm text-xs font-bold text-teal-900 cursor-pointer hover:bg-teal-50/80 transition-all active:scale-95 group max-w-full';
+
+  let countText = '';
+  if (daysUntil === 0) {
+    countText = '<span class="text-teal-600 animate-pulse font-black">今日！</span>';
+  } else {
+    countText = `あと <span class="text-teal-700 font-display font-black text-sm">${daysUntil}</span> 日`;
+  }
+
+  pill.innerHTML = `
+    <span class="w-2 h-2 rounded-full bg-teal-500 animate-pulse flex-shrink-0"></span>
+    <span class="text-slate-500 font-normal">次の約束:</span>
+    <span class="truncate max-w-[140px] sm:max-w-[200px] text-slate-800 font-extrabold">${escapeHtml(nextEvent.title)}</span>
+    <span class="text-teal-800 flex-shrink-0">${countText}</span>
+    <span class="text-slate-400 group-hover:text-teal-600 transition-colors">➔</span>
+  `;
+
+  pill.addEventListener('click', () => {
+    if (onPillClick) onPillClick(nextEvent.id);
+  });
+
+  container.appendChild(pill);
 }
 
 /**

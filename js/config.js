@@ -15,8 +15,17 @@ export const CONFIG = {
     CUSTOM_SUPABASE_URL: 'ourtimeline_custom_supabase_url',
     CUSTOM_SUPABASE_KEY: 'ourtimeline_custom_supabase_key',
     CACHED_EVENTS: 'ourtimeline_cached_events',
-    LAST_SYNC_TIME: 'ourtimeline_last_sync'
+    LAST_SYNC_TIME: 'ourtimeline_last_sync',
+    USER_REACTIONS_PREFIX: 'ourtimeline_user_rx_'
   },
+
+  // ボタニカル・リアクション（ハートは使わず自然で温かい4種）
+  REACTIONS: [
+    { emoji: '🌿', label: 'いいね' },
+    { emoji: '✨', label: '楽しみ' },
+    { emoji: '☕️', label: 'ほっこり' },
+    { emoji: '🤍', label: 'ありがとう' }
+  ],
 
   // 自然なアースカラー＆ボタニカルカテゴリ
   CATEGORIES: {

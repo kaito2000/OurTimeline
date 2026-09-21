@@ -111,3 +111,25 @@ test('Store joinPair updates credentials and clears old cache', () => {
   assert.equal(store.state.supabaseAnonKey, 'new-key');
   assert.equal(store.state.events.length, 0); // 古いキャッシュがクリアされていること
 });
+
+test('Store toggleReaction increments and decrements emoji counts properly', () => {
+  const store = new Store();
+  store.state.events = [
+    { id: 'event-1', title: 'テスト旅行', reactions: {} }
+  ];
+
+  // 1回目の押下（追加）
+  const updated1 = store.toggleReaction('event-1', '🌿');
+  assert.equal(updated1.reactions['🌿'], 1);
+
+  // 別の絵文字の押下
+  const updated2 = store.toggleReaction('event-1', '✨');
+  assert.equal(updated2.reactions['✨'], 1);
+  assert.equal(updated2.reactions['🌿'], 1);
+
+  // 同じ絵文字の再押下（解除）
+  const updated3 = store.toggleReaction('event-1', '🌿');
+  assert.equal(updated3.reactions['🌿'], undefined); // 0になったらキー削除
+  assert.equal(updated3.reactions['✨'], 1);
+});
+
