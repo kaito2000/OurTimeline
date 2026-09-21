@@ -31,6 +31,7 @@ class App {
     this.modalController = null;
     this.timelineContainer = document.getElementById('timeline-container');
     this.daysCounterEl = document.getElementById('days-counter');
+    this.headerMilestoneForecastEl = document.getElementById('header-milestone-forecast');
     this.anniversaryLabelEl = document.getElementById('anniversary-label');
     this.syncStatusEl = document.getElementById('sync-status');
     this.loadingScreenEl = document.getElementById('initial-loading-screen');
@@ -352,10 +353,29 @@ class App {
       this.renderTreeGrowthDetails(state);
     }
 
-    // 2. 記念日カウンター描画 (Day ○○ のみシンプル表示)
+    // 2. 記念日カウンター & 次の節目サブテキスト描画
     if (this.daysCounterEl && state.anniversaryDating) {
       const days = calculateDaysCount(state.anniversaryDating);
       this.daysCounterEl.textContent = `Day ${days}`;
+    }
+
+    if (this.headerMilestoneForecastEl) {
+      if (state.anniversaryDating) {
+        const prediction = predictMilestones({
+          anniversaryDating: state.anniversaryDating,
+          anniversaryMarriage: state.anniversaryMarriage
+        });
+        if (prediction && prediction.nextMilestone) {
+          const next = prediction.nextMilestone;
+          const countText = next.daysUntil === 0 ? '本日！' : `あと${next.daysUntil}日`;
+          this.headerMilestoneForecastEl.textContent = `${next.badge}まで ${countText}`;
+          this.headerMilestoneForecastEl.classList.remove('hidden');
+        } else {
+          this.headerMilestoneForecastEl.classList.add('hidden');
+        }
+      } else {
+        this.headerMilestoneForecastEl.classList.add('hidden');
+      }
     }
 
     // 3. 未読通知バッジ（赤い丸マーク）の更新
@@ -448,14 +468,14 @@ class App {
 
     // 次の節目・記念日予報の計算と描画
     if (this.popoverMilestoneSection) {
-      const milestones = predictMilestones({
+      const prediction = predictMilestones({
         anniversaryDating: state.anniversaryDating,
         anniversaryMarriage: state.anniversaryMarriage
       });
 
-      if (milestones && milestones.length > 0) {
+      if (prediction && prediction.nextMilestone) {
         this.popoverMilestoneSection.classList.remove('hidden');
-        const next = milestones[0];
+        const next = prediction.nextMilestone;
 
         if (this.popoverMilestoneCountdown) {
           this.popoverMilestoneCountdown.textContent = next.daysUntil === 0 ? '今日！' : `あと ${next.daysUntil} 日`;
@@ -464,14 +484,16 @@ class App {
           this.popoverMilestoneTitle.textContent = next.title;
         }
         if (this.popoverMilestoneBadge) {
-          this.popoverMilestoneBadge.textContent = next.type === 'dating' ? '交際記念' : (next.type === 'marriage' ? '結婚記念' : '節目');
+          this.popoverMilestoneBadge.textContent = next.badge;
         }
         if (this.popoverMilestoneDate) {
-          this.popoverMilestoneDate.textContent = `${next.date} (${next.formattedDate || ''})`;
+          this.popoverMilestoneDate.textContent = `${next.targetDate} (${next.formattedDate || ''})`;
         }
 
         if (this.popoverUpcomingMilestones) {
-          const upcomingList = milestones.slice(1, 4);
+          const upcomingList = (prediction.upcomingMilestones || [])
+            .filter(m => m !== next && m.targetDate !== next.targetDate)
+            .slice(0, 3);
           if (upcomingList.length > 0) {
             this.popoverUpcomingMilestones.innerHTML = upcomingList.map(m => `
               <div class="flex items-center justify-between py-1 border-t border-slate-100 text-[11px]">
@@ -546,12 +568,12 @@ class App {
     }
 
     // 3. 次の節目・記念日の事前リマインド通知（7日前 または 当日）
-    const milestones = predictMilestones({
+    const prediction = predictMilestones({
       anniversaryDating: store.state.anniversaryDating,
       anniversaryMarriage: store.state.anniversaryMarriage
     });
-    if (milestones && milestones.length > 0) {
-      const nextM = milestones[0];
+    if (prediction && prediction.nextMilestone) {
+      const nextM = prediction.nextMilestone;
       if (nextM.daysUntil === 0) {
         store.addNotification({
           type: 'milestone_today',
@@ -563,7 +585,7 @@ class App {
         store.addNotification({
           type: 'milestone_upcoming',
           title: `📅 もうすぐ「${nextM.title}」です`,
-          body: `あと7日（${nextM.date}）で節目を迎えます✨`,
+          body: `あと7日（${nextM.targetDate}）で節目を迎えます✨`,
           icon: '📅'
         });
       }
