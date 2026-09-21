@@ -24,7 +24,7 @@ export function addDaysToDate(startDateString, daysToAdd) {
 }
 
 /**
- * 次の周年記念日を計算
+ * 次の周年記念日を計算 (開始年の翌年以降の1周年、2周年...)
  * @param {string} startDateString - YYYY-MM-DD
  * @param {string} baseDateString - 基準日 YYYY-MM-DD
  * @returns {{ date: string, years: number, daysUntil: number } | null}
@@ -50,6 +50,12 @@ export function getNextAnnualAnniversary(startDateString, baseDateString) {
   // 今年の記念日がすでに過ぎている場合は来年
   if (targetDate.getTime() < baseZero.getTime()) {
     targetYear += 1;
+    targetDate = new Date(targetYear, startMonth, startDay);
+  }
+
+  // 開始年以前の場合は、1周年は開始年の翌年
+  if (targetYear <= start.getFullYear()) {
+    targetYear = start.getFullYear() + 1;
     targetDate = new Date(targetYear, startMonth, startDay);
   }
 
@@ -105,33 +111,78 @@ export function predictMilestones({ anniversaryDating, anniversaryMarriage, base
     }
   });
 
-  // 2. 交際周年記念日
-  const nextDatingAnniv = getNextAnnualAnniversary(anniversaryDating, baseDateStr);
-  if (nextDatingAnniv && nextDatingAnniv.daysUntil >= 0) {
+  // 2. 交際記念日・周年
+  if (anniversaryDating > baseDateStr) {
+    // 交際開始日が未来の場合（開始日当日を節目とする）
+    const daysUntilDatingStart = calculateDaysUntil(anniversaryDating, baseDateStr);
     milestones.push({
-      type: 'anniversary_dating',
-      title: `交際 ${nextDatingAnniv.years}周年記念`,
-      badge: `${nextDatingAnniv.years}周年`,
-      targetDate: nextDatingAnniv.date,
-      formattedDate: formatDate(nextDatingAnniv.date),
-      daysUntil: nextDatingAnniv.daysUntil,
+      type: 'dating_start',
+      title: '交際スタート記念日',
+      badge: '交際開始',
+      targetDate: anniversaryDating,
+      formattedDate: formatDate(anniversaryDating),
+      daysUntil: daysUntilDatingStart,
       icon: '🌿'
     });
+  } else {
+    // 過去または今日交際開始 ➔ 次の周年記念日を計算
+    const nextDatingAnniv = getNextAnnualAnniversary(anniversaryDating, baseDateStr);
+    if (nextDatingAnniv && nextDatingAnniv.daysUntil >= 0) {
+      milestones.push({
+        type: 'anniversary_dating',
+        title: `交際 ${nextDatingAnniv.years}周年記念`,
+        badge: `交際${nextDatingAnniv.years}周年`,
+        targetDate: nextDatingAnniv.date,
+        formattedDate: formatDate(nextDatingAnniv.date),
+        daysUntil: nextDatingAnniv.daysUntil,
+        icon: '🌿'
+      });
+    }
   }
 
-  // 3. 結婚周年記念日（設定されている場合）
+  // 3. 結婚記念日・入籍日（設定されている場合）
   if (anniversaryMarriage) {
-    const nextMarriageAnniv = getNextAnnualAnniversary(anniversaryMarriage, baseDateStr);
-    if (nextMarriageAnniv && nextMarriageAnniv.daysUntil >= 0) {
+    if (anniversaryMarriage >= baseDateStr) {
+      // まだ入籍日を迎えていない（未来または今日）
+      // ① 入籍・結婚当日
+      const daysUntilWedding = calculateDaysUntil(anniversaryMarriage, baseDateStr);
+      milestones.push({
+        type: 'wedding_day',
+        title: 'ご入籍・結婚記念日',
+        badge: 'ご入籍',
+        targetDate: anniversaryMarriage,
+        formattedDate: formatDate(anniversaryMarriage),
+        daysUntil: daysUntilWedding,
+        icon: '💍'
+      });
+
+      // ② その1年後の「結婚 1周年記念」も将来の候補として追加
+      const weddingStartYear = parseInt(anniversaryMarriage.split('-')[0], 10);
+      const weddingMonthDay = anniversaryMarriage.substring(4);
+      const firstAnnivDate = `${weddingStartYear + 1}${weddingMonthDay}`;
       milestones.push({
         type: 'anniversary_marriage',
-        title: `結婚 ${nextMarriageAnniv.years}周年記念`,
-        badge: `結婚${nextMarriageAnniv.years}周年`,
-        targetDate: nextMarriageAnniv.date,
-        formattedDate: formatDate(nextMarriageAnniv.date),
-        daysUntil: nextMarriageAnniv.daysUntil,
+        title: '結婚 1周年記念',
+        badge: '結婚1周年',
+        targetDate: firstAnnivDate,
+        formattedDate: formatDate(firstAnnivDate),
+        daysUntil: calculateDaysUntil(firstAnnivDate, baseDateStr),
         icon: '✨'
       });
+    } else {
+      // すでに入籍済み（過去の日付）➔ 次の周年（1周年、2周年...）を計算
+      const nextMarriageAnniv = getNextAnnualAnniversary(anniversaryMarriage, baseDateStr);
+      if (nextMarriageAnniv && nextMarriageAnniv.daysUntil >= 0) {
+        milestones.push({
+          type: 'anniversary_marriage',
+          title: `結婚 ${nextMarriageAnniv.years}周年記念`,
+          badge: `結婚${nextMarriageAnniv.years}周年`,
+          targetDate: nextMarriageAnniv.date,
+          formattedDate: formatDate(nextMarriageAnniv.date),
+          daysUntil: nextMarriageAnniv.daysUntil,
+          icon: '✨'
+        });
+      }
     }
   }
 
@@ -144,11 +195,12 @@ export function predictMilestones({ anniversaryDating, anniversaryMarriage, base
   });
 
   const nextMilestone = milestones.length > 0 ? milestones[0] : null;
-  const upcomingMilestones = milestones.slice(0, 4);
+  const upcomingMilestones = milestones.slice(0, 8);
 
   return {
     currentDays,
     nextMilestone,
-    upcomingMilestones
+    upcomingMilestones,
+    allMilestones: milestones
   };
 }

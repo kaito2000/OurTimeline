@@ -47,13 +47,32 @@ test('predictMilestones finds nearest milestone among days and annual anniversar
   assert.equal(res.nextMilestone.targetDate, '2024-04-09');
   assert.equal(res.nextMilestone.daysUntil, 18);
 
-  // 結婚記念日も含めた場合
-  const resMarriage = predictMilestones({
+  // 未来の入籍予定日 (2024-04-01) が設定されている場合 (基準日: 2024-03-25)
+  const resFutureMarriage = predictMilestones({
     anniversaryDating: '2023-01-01',
     anniversaryMarriage: '2024-04-01',
     baseDate: '2024-03-25'
   });
 
-  // 2024-03-25 から見ると、結婚1周年 (2024-04-01) はあと7日
-  assert.ok(resMarriage.upcomingMilestones.some(m => m.badge === '結婚1周年'));
+  // 2024-03-25 から見ると、2024-04-01 は「ご入籍」当日（あと7日）
+  const weddingMilestone = resFutureMarriage.upcomingMilestones.find(m => m.targetDate === '2024-04-01');
+  assert.ok(weddingMilestone);
+  assert.equal(weddingMilestone.badge, 'ご入籍');
+  assert.equal(weddingMilestone.title, 'ご入籍・結婚記念日');
+  assert.equal(weddingMilestone.daysUntil, 7);
+
+  // そして1年後の 2025-04-01 が「結婚1周年」
+  const firstAnniv = resFutureMarriage.upcomingMilestones.find(m => m.targetDate === '2025-04-01');
+  assert.ok(firstAnniv);
+  assert.equal(firstAnniv.badge, '結婚1周年');
+
+  // すでに入籍済み (2023-04-01) の場合 (基準日: 2024-03-25) -> 2024-04-01 が「結婚1周年」
+  const resPastMarriage = predictMilestones({
+    anniversaryDating: '2022-01-01',
+    anniversaryMarriage: '2023-04-01',
+    baseDate: '2024-03-25'
+  });
+  const pastFirstAnniv = resPastMarriage.upcomingMilestones.find(m => m.targetDate === '2024-04-01');
+  assert.ok(pastFirstAnniv);
+  assert.equal(pastFirstAnniv.badge, '結婚1周年');
 });
