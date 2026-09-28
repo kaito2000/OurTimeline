@@ -1,11 +1,11 @@
-// On This Day - 「○年前の今日」過去の思い出抽出モジュール
+// On This Day - 「○年前の今日」過去の思い出抽出モジュール（同月同日のみ判定）
 import { formatDate } from './timelineRenderer.js';
 
 /**
- * 過去のイベントから「○年前の今日」「○年前の今週/今月」の思い出を抽出
+ * 過去のイベントから「○年前の今日」の思い出を抽出（今日の日付のみ完全一致で判定）
  * @param {Array} events - イベントリスト
  * @param {Date} [referenceDate=new Date()] - 基準日（テスト時は任意日付を指定可）
- * @returns {Object|null} - { event, diffYears, type: 'exact'|'nearby'|'month', message, formattedDate }
+ * @returns {Object|null} - { event, diffYears, type: 'exact', message, formattedDate }
  */
 export function getOnThisDayHighlight(events, referenceDate = new Date()) {
   if (!Array.isArray(events) || events.length === 0) {
@@ -27,7 +27,7 @@ export function getOnThisDayHighlight(events, referenceDate = new Date()) {
     return null;
   }
 
-  // 1. 同月同日（完全一致: ○年前の今日）
+  // 1. 同月同日（完全一致: ○年前の今日）のみを抽出
   const exactMatches = pastYearEvents.filter((e) => {
     const [, m, d] = e.event_date.split('-').map(Number);
     return m === currentMonth && d === currentDay;
@@ -48,46 +48,7 @@ export function getOnThisDayHighlight(events, referenceDate = new Date()) {
     };
   }
 
-  // 2. 同月かつ前後3日以内（○年前のこの頃）
-  const nearbyMatches = pastYearEvents.filter((e) => {
-    const [, m, d] = e.event_date.split('-').map(Number);
-    return m === currentMonth && Math.abs(d - currentDay) <= 3;
-  });
-
-  if (nearbyMatches.length > 0) {
-    const best = pickBestEvent(nearbyMatches, currentYear);
-    const eventYear = Number(best.event_date.split('-')[0]);
-    const diffYears = currentYear - eventYear;
-
-    return {
-      event: best,
-      diffYears,
-      type: 'nearby',
-      message: `${diffYears}年前のこの頃の思い出`,
-      formattedDate: formatDate(best.event_date)
-    };
-  }
-
-  // 3. 同月の思い出（○年前の○月）
-  const monthMatches = pastYearEvents.filter((e) => {
-    const [, m] = e.event_date.split('-').map(Number);
-    return m === currentMonth;
-  });
-
-  if (monthMatches.length > 0) {
-    const best = pickBestEvent(monthMatches, currentYear);
-    const eventYear = Number(best.event_date.split('-')[0]);
-    const diffYears = currentYear - eventYear;
-
-    return {
-      event: best,
-      diffYears,
-      type: 'month',
-      message: `${diffYears}年前の${currentMonth}月の思い出`,
-      formattedDate: formatDate(best.event_date)
-    };
-  }
-
+  // 今日の日付に合致する過去の思い出がなければカードは非表示
   return null;
 }
 

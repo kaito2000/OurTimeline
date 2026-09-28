@@ -17,33 +17,27 @@ test('getOnThisDayHighlight returns exact match when event happened on the same 
   assert.match(highlight.message, /1年前の今日の思い出/);
 });
 
-test('getOnThisDayHighlight returns nearby match when within 3 days in the same month', () => {
+test('getOnThisDayHighlight returns null for nearby dates in the same month (exact date only)', () => {
   const refDate = new Date('2026-09-21T10:00:00');
   const events = [
     { id: '1', title: '2年前の近隣日', event_date: '2024-09-19', memo: '秋の京都' },
     { id: '2', title: '今年の予定', event_date: '2026-10-01', memo: '' }
   ];
 
+  // 今日（09-21）と異なる日付（09-19）なので、前後3日以内でもカードを出さない
   const highlight = getOnThisDayHighlight(events, refDate);
-  assert.ok(highlight);
-  assert.equal(highlight.event.id, '1');
-  assert.equal(highlight.diffYears, 2);
-  assert.equal(highlight.type, 'nearby');
-  assert.match(highlight.message, /2年前のこの頃の思い出/);
+  assert.equal(highlight, null);
 });
 
-test('getOnThisDayHighlight returns month match when in the same month but > 3 days apart', () => {
+test('getOnThisDayHighlight returns null for different day in the same month (exact date only)', () => {
   const refDate = new Date('2026-09-21T10:00:00');
   const events = [
     { id: '1', title: '3年前の9月始め', event_date: '2023-09-05', memo: '引っ越し' }
   ];
 
+  // 同月であっても日付が異なるため非表示
   const highlight = getOnThisDayHighlight(events, refDate);
-  assert.ok(highlight);
-  assert.equal(highlight.event.id, '1');
-  assert.equal(highlight.diffYears, 3);
-  assert.equal(highlight.type, 'month');
-  assert.match(highlight.message, /3年前の9月の思い出/);
+  assert.equal(highlight, null);
 });
 
 test('getOnThisDayHighlight returns null when no past year events in this month', () => {
